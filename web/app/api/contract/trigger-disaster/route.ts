@@ -1,7 +1,22 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import {
+  rpc,
+  networkPassphrase,
+  getContract,
+  getOracleKeypair,
+  StellarSdk,
+} from "@/lib/stellar";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+const POLL_MAX_ATTEMPTS = 60;
+const POLL_INTERVAL_MS = 1000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export async function POST(request: Request) {
   try {
@@ -17,7 +32,7 @@ export async function POST(request: Request) {
 
     const { data: contract, error: contractError } = await supabase
       .from("contracts")
-      .select("id, status")
+      .select("id, crop_id, exporter_id, status")
       .eq("id", contractId)
       .maybeSingle();
 
@@ -33,6 +48,139 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
+    if (contract.status === "frozen") {
+      return NextResponse.json(
+        { success: false, error: "El contrato ya está congelado" },
+        { status: 409 }
+      );
+    }
+
+    const { data: crop, error: cropError } = await supabase
+      .from("crops")
+      .select("crop_id_num, farmer_id")
+      .eq("id", contract.crop_id)
+      .maybeSingle();
+
+    if (cropError || !crop) {
+      return NextResponse.json(
+        { success: false, error: "No se pudo resolver crop_id_num" },
+        { status: 500 }
+      );
+    }
+
+    const [exporterRow, farmerRow] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("wallet_address")
+        .eq("id", contract.exporter_id)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("wallet_address")
+        .eq("id", crop.farmer_id)
+        .maybeSingle(),
+    ]);
+
+    if (!exporterRow.data?.wallet_address || !farmerRow.data?.wallet_address) {
+      return NextResponse.json(
+        { success: false, error: "Falta wallet_address del exporter o farmer" },
+        { status: 404 }
+      );
+    }
+
+    const exporterScVal = StellarSdk.Address.fromString(
+      exporterRow.data.wallet_address
+    ).toScVal();
+    const farmerScVal = StellarSdk.Address.fromString(
+      farmerRow.data.wallet_address
+    ).toScVal();
+    const cropIdScVal = StellarSdk.nativeToScVal(BigInt(crop.crop_id_num), {
+      type: "u64",
+    });
+
+    const oracleKeypair = getOracleKeypair();
+    const oracleAccount = await rpc.getAccount(oracleKeypair.publicKey());
+    const contractInstance = getContract();
+
+    const transaction = new StellarSdk.TransactionBuilder(oracleAccount, {
+      fee: StellarSdk.BASE_FEE,
+      networkPassphrase,
+    })
+      .addOperation(
+        contractInstance.call(
+          "trigger_disaster",
+          exporterScVal,
+          farmerScVal,
+          cropIdScVal
+        )
+      )
+      .setTimeout(180)
+      .build();
+
+    const simulation = await rpc.simulateTransaction(transaction);
+
+    if (StellarSdk.rpc.Api.isSimulationError(simulation)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Simulación fallida",
+          detail: simulation.error,
+        },
+        { status: 400 }
+      );
+    }
+
+    const preparedTx = StellarSdk.rpc.assembleTransaction(
+      transaction,
+      simulation
+    ).build();
+
+    preparedTx.sign(oracleKeypair);
+
+    const sendResponse = await rpc.sendTransaction(preparedTx);
+
+    if (sendResponse.status === "ERROR") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Envío de transacción fallido",
+          detail: sendResponse.errorResult,
+        },
+        { status: 400 }
+      );
+    }
+
+    const txHash = sendResponse.hash;
+    let getResponse = await rpc.getTransaction(txHash);
+    let attempts = 0;
+
+    while (getResponse.status === "NOT_FOUND" && attempts < POLL_MAX_ATTEMPTS) {
+      await sleep(POLL_INTERVAL_MS);
+      getResponse = await rpc.getTransaction(txHash);
+      attempts++;
+    }
+
+    if (getResponse.status === "NOT_FOUND") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Timeout esperando confirmación de la transacción",
+          tx_hash: txHash,
+        },
+        { status: 504 }
+      );
+    }
+
+    if (getResponse.status !== "SUCCESS") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Transacción finalizada con estado: ${getResponse.status}`,
+          tx_hash: txHash,
+        },
+        { status: 400 }
+      );
+    }
 
     const { error: updateError } = await supabase
       .from("contracts")
@@ -41,12 +189,14 @@ export async function POST(request: Request) {
 
     if (updateError) {
       return NextResponse.json(
-        { success: false, error: "Error al congelar el contrato" },
-        { status: 500 }
+        {
+          success: true,
+          tx_hash: txHash,
+          warning: "On-chain exitoso pero fallo al actualizar Supabase",
+        },
+        { status: 200 }
       );
     }
-
-    const txHash = `MOCK_TX_DISASTER_${crypto.randomUUID().split("-")[0]}`;
 
     return NextResponse.json(
       { success: true, tx_hash: txHash },
