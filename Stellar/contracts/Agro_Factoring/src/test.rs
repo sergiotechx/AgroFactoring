@@ -411,6 +411,98 @@ fn test_trigger_disaster_unauthorized() {
 }
 
 // ==================================================================
+// reset_escrow tests
+// ==================================================================
+
+#[test]
+fn test_reset_escrow_full_refund() {
+    let t = setup(5000, 1000, 1);
+
+    // No phases released yet -> full 5000 should return to exporter.
+    assert_eq!(t.token().balance(&t.contract_addr), 5000);
+    assert_eq!(t.token().balance(&t.exporter), 0);
+
+    t.escrow().reset_escrow(&1);
+
+    // Exporter got all funds back, contract holds nothing.
+    assert_eq!(t.token().balance(&t.exporter), 5000);
+    assert_eq!(t.token().balance(&t.contract_addr), 0);
+
+    // Escrow no longer exists.
+    let res = t.escrow().try_get_escrow_state(&t.exporter, &t.farmer, &1);
+    assert_eq!(res, Err(Ok(ContractError::EscrowNotFound)));
+}
+
+#[test]
+fn test_reset_escrow_partial_refund() {
+    let t = setup(5000, 1000, 1);
+
+    // Release 2 phases (2000 to farmer), then reset.
+    t.escrow().release_phase(&1, &1);
+    t.escrow().release_phase(&1, &2);
+
+    assert_eq!(t.token().balance(&t.farmer), 2000);
+    assert_eq!(t.token().balance(&t.contract_addr), 3000);
+
+    t.escrow().reset_escrow(&1);
+
+    // Remaining 3000 returned to exporter.
+    assert_eq!(t.token().balance(&t.exporter), 3000);
+    assert_eq!(t.token().balance(&t.contract_addr), 0);
+    // Farmer keeps what was already released.
+    assert_eq!(t.token().balance(&t.farmer), 2000);
+}
+
+#[test]
+fn test_reset_escrow_allows_reinit() {
+    let t = setup(5000, 1000, 1);
+
+    t.escrow().reset_escrow(&1);
+
+    // Exporter now has 5000 back; re-init with same crop_id should work.
+    let res = t.escrow().try_init(&t.exporter, &t.farmer, &1, &5000, &1000);
+    assert!(res.is_ok());
+
+    let state = t.escrow().get_escrow_state(&t.exporter, &t.farmer, &1);
+    assert_eq!(state.current_phase, 0);
+    assert_eq!(state.status, EscrowStatus::Active);
+}
+
+#[test]
+fn test_reset_escrow_when_frozen() {
+    let t = setup(5000, 1000, 1);
+
+    t.escrow().trigger_disaster(&t.exporter, &t.farmer, &1);
+
+    // Reset should still work on frozen escrows.
+    t.escrow().reset_escrow(&1);
+
+    assert_eq!(t.token().balance(&t.exporter), 5000);
+
+    let res = t.escrow().try_get_escrow_state(&t.exporter, &t.farmer, &1);
+    assert_eq!(res, Err(Ok(ContractError::EscrowNotFound)));
+}
+
+#[test]
+fn test_reset_escrow_not_found() {
+    let t = setup(5000, 1000, 1);
+
+    let res = t.escrow().try_reset_escrow(&999);
+    assert_eq!(res, Err(Ok(ContractError::EscrowNotFound)));
+}
+
+#[test]
+fn test_reset_escrow_unauthorized() {
+    let t = setup(5000, 1000, 1);
+
+    // Disable auth mocking so admin.require_auth() fails.
+    t.env.set_auths(&[]);
+
+    let res = t.escrow().try_reset_escrow(&1);
+    assert!(res.is_err());
+}
+
+// ==================================================================
 // get_escrow_state tests
 // ==================================================================
 

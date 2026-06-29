@@ -20,14 +20,24 @@
     "temperature": "Temperature (°C)",
     "rainfall": "Rainfall (mm)",
     "submit": "Record Reading",
-    "success": "Reading recorded"
+    "success": "Reading recorded",
+    "autoActive": "Auto-generating every 60s"
   },
   "iot": {
     "title": "IoT Sensors",
     "ndvi": "NDVI Index (0-1)",
     "soilMoisture": "Soil Moisture (%)",
     "submit": "Record Reading",
-    "success": "IoT reading recorded"
+    "success": "IoT reading recorded",
+    "autoActive": "Auto-generating every 60s"
+  },
+  "reset": {
+    "button": "Reset Contract",
+    "description": "Removes the on-chain record, the ledger, and restarts phases from scratch.",
+    "confirm": "Reset",
+    "confirmCountdown": "Wait ({seconds})",
+    "success": "Contract reset",
+    "resetting": "Resetting..."
   },
   "error": "An unexpected error occurred"
 }

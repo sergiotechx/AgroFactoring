@@ -15,9 +15,9 @@ import { TX_STEPS_ORDER } from "@/features/stellar/types";
 import {
   Check,
   X,
-  Loader2,
-  ExternalLink,
-} from "lucide-react";
+  SpinnerGap,
+  ArrowSquareOut,
+} from "@phosphor-icons/react";
 
 interface TxProgressModalProps {
   open: boolean;
@@ -107,12 +107,12 @@ export function TxProgressModal({
                 <div className="flex-shrink-0">
                   {state === "completed" && (
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success">
-                      <Check className="h-3.5 w-3.5 text-white" />
+                      <Check weight="bold" className="h-3.5 w-3.5 text-white" />
                     </div>
                   )}
                   {state === "active" && (
                     <div className="flex h-6 w-6 items-center justify-center">
-                      <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                      <SpinnerGap className="h-5 w-5 animate-spin text-accent" />
                     </div>
                   )}
                   {state === "pending" && (
@@ -120,7 +120,7 @@ export function TxProgressModal({
                   )}
                   {state === "error" && (
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-danger">
-                      <X className="h-3.5 w-3.5 text-white" />
+                      <X weight="duotone" className="h-3.5 w-3.5 text-white" />
                     </div>
                   )}
                 </div>
@@ -153,15 +153,17 @@ export function TxProgressModal({
               className="inline-flex items-center gap-1.5 font-mono text-sm text-accent hover:text-accent-hover transition-colors"
             >
               {formatTxHash(status.txHash)}
-              <ExternalLink className="h-3 w-3" />
+              <ArrowSquareOut weight="duotone" className="h-3 w-3" />
             </a>
           </div>
         )}
 
         {/* Error message */}
         {status.step === "error" && status.error && (
-          <div className="rounded-lg border border-danger/30 bg-danger/5 p-4 text-center">
-            <p className="text-sm text-danger">{status.error}</p>
+          <div className="rounded-lg border border-danger/30 bg-danger/5 p-4">
+            <p className="text-sm text-danger text-center line-clamp-3">
+              {status.error}
+            </p>
           </div>
         )}
 

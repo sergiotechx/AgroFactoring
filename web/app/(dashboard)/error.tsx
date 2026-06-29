@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Warning, ArrowsClockwise } from "@phosphor-icons/react";
 
 export default function DashboardError({
   error,
@@ -23,7 +23,7 @@ export default function DashboardError({
     <div className="flex min-h-[50vh] items-center justify-center p-4">
       <Card className="w-full max-w-md border-danger/30">
         <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
-          <AlertTriangle className="h-12 w-12 text-danger" />
+          <Warning className="h-12 w-12 text-danger" weight="duotone" />
           <div>
             <p className="text-lg font-semibold">{t("error.title")}</p>
             <p className="mt-1 text-sm text-text-muted">
@@ -31,7 +31,7 @@ export default function DashboardError({
             </p>
           </div>
           <Button variant="outline" onClick={reset}>
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <ArrowsClockwise className="mr-2 h-4 w-4" weight="duotone" />
             {t("error.retry")}
           </Button>
         </CardContent>

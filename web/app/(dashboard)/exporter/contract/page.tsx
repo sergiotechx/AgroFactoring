@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { useContracts, useDashboard } from "@/features/dashboard/hooks/use-dashboard";
 import { PhaseTimeline } from "@/features/dashboard/components/phase-timeline";
 import { PhaseLedger } from "@/features/dashboard/components/phase-ledger";
+import { PhaseAccordion, PhaseFinancialSummary } from "@/features/dashboard/components/phase-detail-breakdown";
 import { DashboardSkeleton } from "@/features/dashboard/components/skeletons/dashboard-skeleton";
 import { FrozenBanner } from "@/features/dashboard/components/frozen-banner";
 import { ContractInitModal } from "@/features/dashboard/components/contract-init-modal";
@@ -21,17 +22,17 @@ import {
 import { DEMO_CONTRACT_PLACEHOLDER } from "@/features/dashboard/types";
 import { formatUSDC, formatDate } from "@/lib/format";
 import {
-  AlertTriangle,
-  RefreshCw,
-  Rocket,
-  Send,
+  Warning,
+  ArrowsClockwise,
+  RocketLaunch,
+  PaperPlaneTilt,
   Hash,
-  DollarSign,
-  Layers,
+  CurrencyDollar,
+  Stack,
   ShieldCheck,
   Calendar,
   Users,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 
 const statusVariant = {
   active: "success",
@@ -65,12 +66,12 @@ export default function ExporterContractPage() {
         <h1 className="text-2xl font-bold">{t("nav.contract")}</h1>
         <Card className="border-danger/30">
           <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
-            <AlertTriangle className="h-10 w-10 text-danger" />
+            <Warning weight="duotone" className="h-10 w-10 text-danger" />
             <p className="text-sm text-text-muted">
               {error instanceof Error ? error.message : tDash("error.description")}
             </p>
             <Button variant="outline" size="sm" onClick={() => { contractsQuery.refetch(); dashboardQuery.refetch(); }}>
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <ArrowsClockwise weight="duotone" className="mr-2 h-4 w-4" />
               {tDash("error.retry")}
             </Button>
           </CardContent>
@@ -137,7 +138,7 @@ export default function ExporterContractPage() {
             <CardTitle className="text-sm font-medium text-text-secondary">
               {tDash("metrics.contractId")}
             </CardTitle>
-            <Hash className="h-4 w-4 text-text-muted" />
+            <Hash weight="duotone" className="h-4 w-4 text-text-muted" />
           </CardHeader>
           <CardContent>
             <p className="text-sm font-mono truncate">{contract.id}</p>
@@ -149,7 +150,7 @@ export default function ExporterContractPage() {
             <CardTitle className="text-sm font-medium text-text-secondary">
               {tDash("metrics.totalInCustody")}
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-text-muted" />
+            <CurrencyDollar weight="duotone" className="h-4 w-4 text-text-muted" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold tabular-nums">{formatUSDC(contract.total_amount)}</p>
@@ -164,7 +165,7 @@ export default function ExporterContractPage() {
             <CardTitle className="text-sm font-medium text-text-secondary">
               {tDash("metrics.status")}
             </CardTitle>
-            <ShieldCheck className="h-4 w-4 text-text-muted" />
+            <ShieldCheck weight="duotone" className="h-4 w-4 text-text-muted" />
           </CardHeader>
           <CardContent>
             <Badge variant={statusVariant[contract.status]}>
@@ -178,7 +179,7 @@ export default function ExporterContractPage() {
             <CardTitle className="text-sm font-medium text-text-secondary">
               {tDash("metrics.currentPhase")}
             </CardTitle>
-            <Layers className="h-4 w-4 text-text-muted" />
+            <Stack weight="duotone" className="h-4 w-4 text-text-muted" />
           </CardHeader>
           <CardContent>
             <div className="flex items-baseline gap-1">
@@ -194,7 +195,7 @@ export default function ExporterContractPage() {
             <CardTitle className="text-sm font-medium text-text-secondary">
               {tDash("metrics.createdAt")}
             </CardTitle>
-            <Calendar className="h-4 w-4 text-text-muted" />
+            <Calendar weight="duotone" className="h-4 w-4 text-text-muted" />
           </CardHeader>
           <CardContent>
             <p className="text-sm font-medium">{formatDate(contract.created_at)}</p>
@@ -207,7 +208,7 @@ export default function ExporterContractPage() {
               <CardTitle className="text-sm font-medium text-text-secondary">
                 {tDash("metrics.counterpart")}
               </CardTitle>
-              <Users className="h-4 w-4 text-text-muted" />
+              <Users weight="duotone" className="h-4 w-4 text-text-muted" />
             </CardHeader>
             <CardContent>
               <p className="text-lg font-semibold">{farmer.username}</p>
@@ -233,13 +234,13 @@ export default function ExporterContractPage() {
             <div className="mt-6 flex justify-center">
               {needsInit && (
                 <Button onClick={() => setShowInitModal(true)} className="gap-2">
-                  <Rocket className="h-4 w-4" />
+                  <RocketLaunch weight="duotone" className="h-4 w-4" />
                   {tDash("contract.initializeContract")}
                 </Button>
               )}
               {canRelease && currentPhaseData && (
                 <Button onClick={() => setShowReleaseModal(true)} className="gap-2">
-                  <Send className="h-4 w-4" />
+                  <PaperPlaneTilt weight="duotone" className="h-4 w-4" />
                   {tPhases("actions.releasePhase", { number: contract.current_phase })}
                 </Button>
               )}
@@ -248,45 +249,24 @@ export default function ExporterContractPage() {
         </CardContent>
       </Card>
 
-      {/* Ledger */}
-      <PhaseLedger ledger={ledger} phases={phases} />
+      {/* Phase detail accordion */}
+      <PhaseAccordion
+        phases={phases}
+        ledger={ledger}
+        contract={contract}
+        isFrozen={isFrozen}
+        totalAmount={contract.total_amount}
+      />
 
-      {/* Per-phase budget breakdown */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">{tPhases("timeline.title")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {phases.map((phase) => {
-              const released = ledger.find((e) => e.phase_number === phase.phase_number);
-              const isComplete = !!released;
-              return (
-                <div key={phase.id} className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${isComplete ? "bg-success text-white" : "border-2 border-border text-text-muted"}`}>
-                      {phase.phase_number}
-                    </div>
-                    <span className="text-sm truncate">{tPhases(`names.${phase.phase_number}`)}</span>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <span className="text-sm tabular-nums font-medium">{formatUSDC(phase.amount_requested)}</span>
-                    {isComplete ? (
-                      <Badge variant="success" className="text-[10px]">{tPhases("status.completed")}</Badge>
-                    ) : isFrozen ? (
-                      <Badge variant="danger" className="text-[10px]">{tPhases("status.frozen")}</Badge>
-                    ) : phase.phase_number === contract.current_phase ? (
-                      <Badge className="text-[10px]">{tPhases("status.current")}</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px]">{tPhases("status.pending")}</Badge>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Cumulative financial summary */}
+      <PhaseFinancialSummary
+        ledger={ledger}
+        isFrozen={isFrozen}
+        totalAmount={contract.total_amount}
+      />
+
+      {/* Registered releases */}
+      <PhaseLedger ledger={ledger} phases={phases} />
 
       {/* Modals */}
       <ContractInitModal

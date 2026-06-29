@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { apiPost } from "@/lib/api-client";
 import type { Contract } from "@/features/dashboard/types";
-import { Play, Square, Timer, Loader2, AlertTriangle } from "lucide-react";
+import { Play, Stop, Timer, SpinnerGap, Warning } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 interface EmulatorControlsProps {
@@ -60,7 +60,7 @@ export function EmulatorControls({ contract }: EmulatorControlsProps) {
         <CardTitle className="text-sm font-medium text-text-secondary">
           {t("title")}
         </CardTitle>
-        <Timer className="h-4 w-4 text-text-muted" />
+        <Timer className="h-4 w-4 text-text-muted" weight="duotone" />
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Status badge */}
@@ -85,7 +85,7 @@ export function EmulatorControls({ contract }: EmulatorControlsProps) {
         {/* Frozen warning */}
         {isFrozen && (
           <div className="flex items-start gap-2 rounded-md bg-danger/5 p-3">
-            <AlertTriangle className="h-4 w-4 text-danger mt-0.5 flex-shrink-0" />
+            <Warning className="h-4 w-4 text-danger mt-0.5 flex-shrink-0" weight="duotone" />
             <p className="text-xs text-danger">{t("frozenWarning")}</p>
           </div>
         )}
@@ -103,17 +103,17 @@ export function EmulatorControls({ contract }: EmulatorControlsProps) {
           >
             {controlMutation.isPending ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <SpinnerGap className="mr-2 h-4 w-4 animate-spin" />
                 {isActive ? t("actions.stopping") : t("actions.starting")}
               </>
             ) : isActive ? (
               <>
-                <Square className="mr-2 h-4 w-4" />
+                <Stop className="mr-2 h-4 w-4" weight="fill" />
                 {t("actions.stop")}
               </>
             ) : (
               <>
-                <Play className="mr-2 h-4 w-4" />
+                <Play className="mr-2 h-4 w-4" weight="fill" />
                 {t("actions.start")}
               </>
             )}

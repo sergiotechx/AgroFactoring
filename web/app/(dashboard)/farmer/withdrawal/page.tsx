@@ -9,7 +9,7 @@ import { DashboardSkeleton } from "@/features/dashboard/components/skeletons/das
 import { FrozenBanner } from "@/features/dashboard/components/frozen-banner";
 import { BalanceCard } from "@/features/withdrawal/components/balance-card";
 import { WithdrawalHistory } from "@/features/withdrawal/components/withdrawal-history";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Warning, ArrowsClockwise } from "@phosphor-icons/react";
 
 export default function FarmerWithdrawalPage() {
   const t = useTranslations("common");
@@ -30,12 +30,12 @@ export default function FarmerWithdrawalPage() {
         <h1 className="text-2xl font-bold">{t("nav.withdrawal")}</h1>
         <Card className="border-danger/30">
           <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
-            <AlertTriangle className="h-10 w-10 text-danger" />
+            <Warning weight="duotone" className="h-10 w-10 text-danger" />
             <p className="text-sm text-text-muted">
               {error instanceof Error ? error.message : tDash("error.description")}
             </p>
             <Button variant="outline" size="sm" onClick={() => { contractsQuery.refetch(); dashboardQuery.refetch(); }}>
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <ArrowsClockwise weight="duotone" className="mr-2 h-4 w-4" />
               {tDash("error.retry")}
             </Button>
           </CardContent>

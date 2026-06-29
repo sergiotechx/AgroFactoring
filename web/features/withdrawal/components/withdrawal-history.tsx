@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatUSDC, formatDate } from "@/lib/format";
+import Image from "next/image";
 import { useWithdrawals } from "../hooks/use-withdrawals";
-import { ArrowDownToLine } from "lucide-react";
 
 interface WithdrawalHistoryProps {
   contractId: string;
@@ -26,7 +26,7 @@ export function WithdrawalHistory({ contractId }: WithdrawalHistoryProps) {
     return (
       <div className="rounded-lg border border-dashed border-border p-8">
         <div className="flex flex-col items-center justify-center text-center">
-          <ArrowDownToLine className="h-10 w-10 text-text-muted mb-3" />
+          <Image src="/wallet.png" alt="" width={80} height={80} className="object-contain mb-1" />
           <p className="text-sm text-text-muted">{t("history.empty")}</p>
         </div>
       </div>

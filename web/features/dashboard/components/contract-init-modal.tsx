@@ -23,7 +23,7 @@ import { formatUSDC } from "@/lib/format";
 import { useFreighter } from "@/features/stellar/hooks/use-freighter";
 import { WalletStatus } from "@/features/stellar/components/wallet-status";
 import type { DashboardState } from "@/features/dashboard/types";
-import { Loader2 } from "lucide-react";
+import { SpinnerGap } from "@phosphor-icons/react";
 
 interface ContractInitModalProps {
   open: boolean;
@@ -120,7 +120,7 @@ export function ContractInitModal({
           <Button onClick={onConfirm} disabled={!canSubmit}>
             {isPending ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <SpinnerGap className="mr-2 h-4 w-4 animate-spin" />
                 {t("init.confirming")}
               </>
             ) : (

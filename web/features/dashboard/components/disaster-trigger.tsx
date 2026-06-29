@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Image from "next/image";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { apiPost } from "@/lib/api-client";
 import type { DisasterResponse } from "@/features/dashboard/types";
 import { motion } from "motion/react";
-import { AlertTriangle, Snowflake, Loader2 } from "lucide-react";
+import { Warning, Snowflake, SpinnerGap } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 interface DisasterTriggerProps {
@@ -96,7 +97,7 @@ export function DisasterTrigger({
             disabled={disabled}
             onClick={() => setShowModal(true)}
           >
-            <AlertTriangle className="mr-2 h-4 w-4" />
+            <Warning className="mr-2 h-4 w-4" weight="duotone" />
             {t("trigger.buttonLabel")}
           </Button>
         </CardContent>
@@ -121,16 +122,14 @@ export function DisasterTrigger({
           <DialogHeader className="text-center">
             <div className="mx-auto mb-4">
               <motion.div
-                animate={{ rotate: [0, -5, 5, -5, 5, 0] }}
+                animate={{ rotate: [0, -3, 3, -3, 3, 0] }}
                 transition={{
                   duration: 0.6,
                   repeat: Infinity,
                   repeatDelay: 2,
                 }}
               >
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-danger/10 mx-auto">
-                  <AlertTriangle className="h-8 w-8 text-danger" />
-                </div>
+                <Image src="/disaster.png" alt="" width={180} height={180} className="object-contain mx-auto drop-shadow-lg" />
               </motion.div>
             </div>
             <DialogTitle className="text-xl text-danger">
@@ -145,7 +144,7 @@ export function DisasterTrigger({
                   key={key}
                   className="flex items-start gap-3 rounded-md bg-danger/5 p-3"
                 >
-                  <Snowflake className="h-4 w-4 text-danger mt-0.5 flex-shrink-0" />
+                  <Snowflake className="h-4 w-4 text-danger mt-0.5 flex-shrink-0" weight="duotone" />
                   <p className="text-sm text-danger/90">{t(`modal.${key}`)}</p>
                 </div>
               )
@@ -167,7 +166,7 @@ export function DisasterTrigger({
             >
               {disasterMutation.isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <SpinnerGap className="mr-2 h-4 w-4 animate-spin" />
                   {t("progress.confirming")}
                 </>
               ) : countdownActive ? (

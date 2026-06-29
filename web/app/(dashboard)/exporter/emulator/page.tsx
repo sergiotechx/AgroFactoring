@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useContracts, useDashboard } from "@/features/dashboard/hooks/use-dashboard";
 import { EmulatorControls } from "@/features/dashboard/components/emulator-controls";
@@ -11,7 +13,97 @@ import { IoTPanel } from "@/features/dashboard/components/iot-panel";
 import { DisasterTrigger } from "@/features/dashboard/components/disaster-trigger";
 import { FrozenBanner } from "@/features/dashboard/components/frozen-banner";
 import { DashboardSkeleton } from "@/features/dashboard/components/skeletons/dashboard-skeleton";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { apiPost } from "@/lib/api-client";
+import Image from "next/image";
+import { Warning, ArrowsClockwise, ArrowCounterClockwise, SpinnerGap } from "@phosphor-icons/react";
+import { toast } from "sonner";
+
+function ResetButton({ contractId }: { contractId: string }) {
+  const t = useTranslations("emulator");
+  const queryClient = useQueryClient();
+  const [countdown, setCountdown] = useState(0);
+  const [armed, setArmed] = useState(false);
+
+  useEffect(() => {
+    if (!armed) return;
+    setCountdown(3);
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [armed]);
+
+  const resetMutation = useMutation({
+    mutationFn: () =>
+      apiPost("/api/contract/reset", { contract_id: contractId }),
+    onSuccess: () => {
+      toast.success(t("reset.success"));
+      setArmed(false);
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : t("error"));
+      setArmed(false);
+    },
+  });
+
+  const handleClick = useCallback(() => {
+    if (!armed) {
+      setArmed(true);
+      return;
+    }
+    if (countdown === 0) {
+      resetMutation.mutate();
+    }
+  }, [armed, countdown, resetMutation]);
+
+  return (
+    <Card className="border-warning/30 bg-warning/[0.02]">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-warning">
+          {t("reset.button")}
+        </CardTitle>
+        <ArrowCounterClockwise className="h-4 w-4 text-warning" weight="duotone" />
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-xs text-text-muted">{t("reset.description")}</p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full border-warning/50 text-warning hover:bg-warning/10"
+          disabled={resetMutation.isPending}
+          onClick={handleClick}
+        >
+          {resetMutation.isPending ? (
+            <>
+              <SpinnerGap className="mr-2 h-4 w-4 animate-spin" />
+              {t("reset.resetting")}
+            </>
+          ) : armed && countdown > 0 ? (
+            t("reset.confirmCountdown", { seconds: countdown })
+          ) : armed ? (
+            <>
+              <ArrowCounterClockwise className="mr-2 h-4 w-4" weight="duotone" />
+              {t("reset.confirm")}
+            </>
+          ) : (
+            <>
+              <ArrowCounterClockwise className="mr-2 h-4 w-4" weight="duotone" />
+              {t("reset.button")}
+            </>
+          )}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function ExporterEmulatorPage() {
   const t = useTranslations("common");
@@ -31,12 +123,12 @@ export default function ExporterEmulatorPage() {
         <h1 className="text-2xl font-bold">{t("nav.emulator")}</h1>
         <Card className="border-danger/30">
           <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
-            <AlertTriangle className="h-10 w-10 text-danger" />
+            <Warning weight="duotone" className="h-10 w-10 text-danger" />
             <p className="text-sm text-text-muted">
               {error instanceof Error ? error.message : tDash("error.description")}
             </p>
             <Button variant="outline" size="sm" onClick={() => { contractsQuery.refetch(); dashboardQuery.refetch(); }}>
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <ArrowsClockwise weight="duotone" className="mr-2 h-4 w-4" />
               {tDash("error.retry")}
             </Button>
           </CardContent>
@@ -63,9 +155,12 @@ export default function ExporterEmulatorPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold">{t("nav.emulator")}</h1>
-        <Badge>{t("roles.exporter")}</Badge>
+      <div className="flex items-center gap-4">
+        <Image src="/emulator.png" alt="" width={108} height={108} className="object-contain drop-shadow-md" />
+        <div>
+          <h1 className="text-2xl font-bold">{t("nav.emulator")}</h1>
+          <Badge className="mt-1">{t("roles.exporter")}</Badge>
+        </div>
       </div>
 
       {isFrozen && <FrozenBanner />}
@@ -75,14 +170,17 @@ export default function ExporterEmulatorPage() {
 
       {/* Data Input Panels */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <WeatherPanel contractId={contractId} disabled={isFrozen} />
-        <IoTPanel contractId={contractId} disabled={isFrozen} />
+        <WeatherPanel contractId={contractId} disabled={isFrozen} emulatorActive={contract.emulator_active} />
+        <IoTPanel contractId={contractId} disabled={isFrozen} emulatorActive={contract.emulator_active} />
       </div>
 
-      {/* Disaster Trigger */}
-      {!isFrozen && contract.status === "active" && (
-        <DisasterTrigger contractId={contractId} />
-      )}
+      {/* Disaster Trigger & Reset */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {!isFrozen && contract.status === "active" && (
+          <DisasterTrigger contractId={contractId} />
+        )}
+        <ResetButton contractId={contractId} />
+      </div>
     </div>
   );
 }

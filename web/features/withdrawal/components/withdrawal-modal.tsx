@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { formatUSDC } from "@/lib/format";
-import { Loader2, Check, ArrowDownToLine } from "lucide-react";
+import { SpinnerGap, Check, ArrowLineDown } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "motion/react";
 
 const BANK_OPTIONS = [
@@ -183,7 +183,7 @@ export function WithdrawalModal({
 
               {/* Submit */}
               <Button type="submit" className="w-full gap-2">
-                <ArrowDownToLine className="h-4 w-4" />
+                <ArrowLineDown weight="duotone" className="h-4 w-4" />
                 {t("modal.confirm")}
               </Button>
             </motion.form>
@@ -197,7 +197,7 @@ export function WithdrawalModal({
               exit={{ opacity: 0 }}
               className="flex flex-col items-center gap-4 py-8"
             >
-              <Loader2 className="h-10 w-10 animate-spin text-accent" />
+              <SpinnerGap className="h-10 w-10 animate-spin text-accent" />
               <p className="text-sm font-medium text-text-secondary">
                 {t("modal.processing")}
               </p>
@@ -217,7 +217,7 @@ export function WithdrawalModal({
                 transition={{ type: "spring", stiffness: 400, damping: 15 }}
                 className="flex h-14 w-14 items-center justify-center rounded-full bg-success"
               >
-                <Check className="h-7 w-7 text-white" />
+                <Check weight="bold" className="h-7 w-7 text-white" />
               </motion.div>
               <div className="text-center">
                 <p className="text-lg font-semibold">{t("modal.success")}</p>

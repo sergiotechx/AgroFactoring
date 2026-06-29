@@ -277,6 +277,35 @@ impl Contract {
         Ok(())
     }
 
+    // Reset an escrow: returns any remaining USDC to the exporter and removes
+    // the escrow entry from persistent storage. Admin-only so that resets are
+    // controlled (e.g. from the emulator). After a reset, `init` can be called
+    // again with the same crop_id.
+    pub fn reset_escrow(
+        env: Env,
+        crop_id: u64,
+    ) -> Result<(), ContractError> {
+        require_admin(&env)?;
+
+        let escrow: EscrowData = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Escrow(crop_id))
+            .ok_or(ContractError::EscrowNotFound)?;
+
+        // Return unreleased funds to the exporter.
+        let remaining = escrow.total_amount - escrow.released_amount;
+        if remaining > 0 {
+            let token = TokenClient::new(&env, &escrow.usdc_address);
+            token.transfer(&env.current_contract_address(), &escrow.exporter, &remaining);
+        }
+
+        // Remove the escrow so the crop_id can be reused.
+        env.storage().persistent().remove(&DataKey::Escrow(crop_id));
+
+        Ok(())
+    }
+
     // Read-only accessor that returns the full escrow state for a crop. The
     // caller must provide the matching exporter and farmer; mismatched parties
     // receive a PartyMismatch error so arbitrary callers cannot inspect other

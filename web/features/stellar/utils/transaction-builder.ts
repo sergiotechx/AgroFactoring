@@ -1,5 +1,34 @@
 import { getStellarSdk, getRpc, getContract, NETWORK_PASSPHRASE } from "../config";
 
+/** Map contract error codes to user-friendly messages */
+const CONTRACT_ERRORS: Record<string, string> = {
+  "#1": "Admin no inicializado",
+  "#2": "El escrow ya fue inicializado para este cultivo",
+  "#3": "No autorizado para esta acción",
+  "#4": "Escrow no encontrado",
+  "#5": "Monto inválido (cero, negativo o no divisible)",
+  "#6": "El escrow está congelado por desastre",
+  "#7": "Fase inválida o fuera de orden",
+  "#8": "USDC no configurado en el contrato",
+  "#9": "Las partes no coinciden con el escrow",
+};
+
+function parseSimulationError(raw: string, method: string): string {
+  const errorMatch = raw.match(/#(\d+)/);
+  if (errorMatch) {
+    const code = `#${errorMatch[1]}`;
+    const friendly = CONTRACT_ERRORS[code];
+    if (friendly) return friendly;
+    return `Error del contrato (${code}) al ejecutar "${method}"`;
+  }
+  // Fallback: trim the verbose diagnostic log
+  const firstLine = raw.split("\n")[0];
+  if (firstLine.length > 120) {
+    return firstLine.slice(0, 120) + "…";
+  }
+  return firstLine;
+}
+
 /**
  * Build the "init" transaction for the escrow contract.
  * contract.call("init", exporter, farmer, crop_id, total_amount, amount_per_phase)
@@ -18,9 +47,18 @@ export async function buildInitTx(
   const contract = await getContract();
   const account = await rpc.getAccount(sourceAddress);
 
+  let farmerScVal: InstanceType<typeof StellarSdk.xdr.ScVal>;
+  try {
+    farmerScVal = StellarSdk.Address.fromString(params.farmerAddress).toScVal();
+  } catch {
+    throw new Error(
+      `La dirección del agricultor no es válida: ${params.farmerAddress.slice(0, 8)}... — actualice la wallet_address en el perfil del agricultor.`
+    );
+  }
+
   const args: InstanceType<typeof StellarSdk.xdr.ScVal>[] = [
     StellarSdk.Address.fromString(sourceAddress).toScVal(),
-    StellarSdk.Address.fromString(params.farmerAddress).toScVal(),
+    farmerScVal,
     StellarSdk.nativeToScVal(BigInt(params.cropIdNum), { type: "u64" }),
     StellarSdk.nativeToScVal(BigInt(params.totalAmountStroops), { type: "i128" }),
     StellarSdk.nativeToScVal(BigInt(params.phaseAmountStroops), { type: "i128" }),
@@ -37,7 +75,7 @@ export async function buildInitTx(
   const simulation = await rpc.simulateTransaction(tx);
 
   if (StellarSdk.rpc.Api.isSimulationError(simulation)) {
-    throw new Error(`Simulation failed: ${simulation.error}`);
+    throw new Error(parseSimulationError(simulation.error, "init"));
   }
 
   tx = StellarSdk.rpc.assembleTransaction(tx, simulation).build();
@@ -77,7 +115,7 @@ export async function buildReleasePhaseTx(
   const simulation = await rpc.simulateTransaction(tx);
 
   if (StellarSdk.rpc.Api.isSimulationError(simulation)) {
-    throw new Error(`Simulation failed: ${simulation.error}`);
+    throw new Error(parseSimulationError(simulation.error, "release_phase"));
   }
 
   tx = StellarSdk.rpc.assembleTransaction(tx, simulation).build();

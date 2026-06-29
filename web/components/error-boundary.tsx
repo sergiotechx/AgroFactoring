@@ -3,7 +3,7 @@
 import { Component, type ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Warning, ArrowsClockwise } from "@phosphor-icons/react";
 
 interface ErrorBoundaryLabels {
   title: string;
@@ -52,7 +52,7 @@ export class ErrorBoundary extends Component<
       return (
         <Card className="border-danger/30">
           <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
-            <AlertTriangle className="h-10 w-10 text-danger" />
+            <Warning weight="duotone" className="h-10 w-10 text-danger" />
             <div>
               <p className="font-semibold">{labels.title}</p>
               <p className="mt-1 text-sm text-text-muted">
@@ -64,7 +64,7 @@ export class ErrorBoundary extends Component<
               size="sm"
               onClick={() => this.setState({ hasError: false, error: null })}
             >
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <ArrowsClockwise weight="duotone" className="mr-2 h-4 w-4" />
               {labels.retry}
             </Button>
           </CardContent>

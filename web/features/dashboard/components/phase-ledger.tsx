@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/table";
 import { formatUSDC, formatDate, formatTxHash, getStellarExplorerUrl } from "@/lib/format";
 import type { LedgerEntry, Phase } from "@/features/dashboard/types";
-import { ExternalLink, FileText } from "lucide-react";
+import Image from "next/image";
+import { ArrowSquareOut } from "@phosphor-icons/react";
 
 interface PhaseLedgerProps {
   ledger: LedgerEntry[];
@@ -30,7 +31,7 @@ export function PhaseLedger({ ledger, phases }: PhaseLedgerProps) {
     return (
       <div className="rounded-lg border border-dashed border-border p-8">
         <div className="flex flex-col items-center justify-center text-center">
-          <FileText className="h-10 w-10 text-text-muted mb-3" />
+          <Image src="/empty-field.png" alt="" width={80} height={80} className="object-contain mb-1" />
           <p className="text-sm text-text-muted">{t("ledger.empty")}</p>
         </div>
       </div>
@@ -72,7 +73,7 @@ export function PhaseLedger({ ledger, phases }: PhaseLedgerProps) {
                   aria-label={t("ledger.viewOnExplorer")}
                 >
                   {formatTxHash(entry.tx_hash)}
-                  <ExternalLink className="h-3 w-3" />
+                  <ArrowSquareOut className="h-3 w-3" weight="duotone" />
                 </a>
               </TableCell>
             </TableRow>

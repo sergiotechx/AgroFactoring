@@ -12,7 +12,8 @@ import { DashboardSkeleton } from "@/features/dashboard/components/skeletons/das
 import { FrozenBanner } from "@/features/dashboard/components/frozen-banner";
 import { BalanceCard } from "@/features/withdrawal/components/balance-card";
 import { WithdrawalHistory } from "@/features/withdrawal/components/withdrawal-history";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import Image from "next/image";
+import { Warning, ArrowsClockwise } from "@phosphor-icons/react";
 
 export default function FarmerPage() {
   const t = useTranslations("common");
@@ -38,7 +39,7 @@ export default function FarmerPage() {
         </div>
         <Card className="border-danger/30">
           <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
-            <AlertTriangle className="h-10 w-10 text-danger" />
+            <Warning weight="duotone" className="h-10 w-10 text-danger" />
             <div className="text-center">
               <p className="font-semibold text-foreground">{tDash("error.title")}</p>
               <p className="mt-1 text-sm text-text-muted">
@@ -53,7 +54,7 @@ export default function FarmerPage() {
                 dashboardQuery.refetch();
               }}
             >
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <ArrowsClockwise weight="duotone" className="mr-2 h-4 w-4" />
               {tDash("error.retry")}
             </Button>
           </CardContent>
@@ -72,6 +73,7 @@ export default function FarmerPage() {
         </div>
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center gap-2 py-12 text-text-muted">
+            <Image src="/empty-field.png" alt="" width={96} height={96} className="object-contain mb-2" />
             <p className="font-medium">{tDash("contract.noContract")}</p>
             <p className="text-sm">{tDash("contract.noContractDesc")}</p>
           </CardContent>

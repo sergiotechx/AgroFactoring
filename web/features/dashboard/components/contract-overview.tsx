@@ -7,13 +7,13 @@ import { Progress } from "@/components/ui/progress";
 import { formatUSDC } from "@/lib/format";
 import type { DashboardState } from "@/features/dashboard/types";
 import {
-  DollarSign,
-  Layers,
+  CurrencyDollar,
+  Stack,
   ShieldCheck,
-  Sprout,
-  Weight,
-  Users,
-} from "lucide-react";
+  Plant,
+  Scales,
+  UsersThree,
+} from "@phosphor-icons/react";
 import { motion } from "motion/react";
 
 interface ContractOverviewProps {
@@ -49,7 +49,7 @@ export function ContractOverview({ data, role }: ContractOverviewProps) {
             ? t("metrics.totalInCustody")
             : t("metrics.fundsReceived")}
         </CardTitle>
-        <DollarSign className="h-4 w-4 text-text-muted" />
+        <CurrencyDollar className="h-4 w-4 text-text-muted" weight="duotone" />
       </CardHeader>
       <CardContent>
         <p className="text-2xl font-bold tabular-nums">
@@ -65,7 +65,7 @@ export function ContractOverview({ data, role }: ContractOverviewProps) {
         <CardTitle className="text-sm font-medium text-text-secondary">
           {t("metrics.currentPhase")}
         </CardTitle>
-        <Layers className="h-4 w-4 text-text-muted" />
+        <Stack className="h-4 w-4 text-text-muted" weight="duotone" />
       </CardHeader>
       <CardContent>
         <div className="flex items-baseline gap-1">
@@ -86,7 +86,7 @@ export function ContractOverview({ data, role }: ContractOverviewProps) {
         <CardTitle className="text-sm font-medium text-text-secondary">
           {t("metrics.status")}
         </CardTitle>
-        <ShieldCheck className="h-4 w-4 text-text-muted" />
+        <ShieldCheck className="h-4 w-4 text-text-muted" weight="duotone" />
       </CardHeader>
       <CardContent>
         <Badge variant={statusVariant[contract.status]}>
@@ -105,7 +105,7 @@ export function ContractOverview({ data, role }: ContractOverviewProps) {
                   ? t("metrics.myCrop")
                   : t("metrics.cropType")}
               </CardTitle>
-              <Sprout className="h-4 w-4 text-text-muted" />
+              <Plant className="h-4 w-4 text-text-muted" weight="duotone" />
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">{crop.crop_type}</p>
@@ -125,7 +125,7 @@ export function ContractOverview({ data, role }: ContractOverviewProps) {
               <CardTitle className="text-sm font-medium text-text-secondary">
                 {t("metrics.estimatedTons")}
               </CardTitle>
-              <Weight className="h-4 w-4 text-text-muted" />
+              <Scales className="h-4 w-4 text-text-muted" weight="duotone" />
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold tabular-nums">
@@ -145,7 +145,7 @@ export function ContractOverview({ data, role }: ContractOverviewProps) {
               <CardTitle className="text-sm font-medium text-text-secondary">
                 {t("metrics.counterpart")}
               </CardTitle>
-              <Users className="h-4 w-4 text-text-muted" />
+              <UsersThree className="h-4 w-4 text-text-muted" weight="duotone" />
             </CardHeader>
             <CardContent>
               <p className="text-lg font-semibold">{counterpart.username}</p>

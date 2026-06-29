@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { formatUSDC } from "@/lib/format";
 import type { Phase, LedgerEntry, ContractStatus } from "@/features/dashboard/types";
-import { Check, Snowflake } from "lucide-react";
+import { Check, Snowflake } from "@phosphor-icons/react";
 import { motion } from "motion/react";
 
 interface PhaseTimelineProps {
@@ -137,7 +137,7 @@ function PhaseImage({
           transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.2 }}
           className="absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-success text-white shadow-[0_0_10px_rgba(20,184,166,0.4)]"
         >
-          <Check className="h-3.5 w-3.5" strokeWidth={3} />
+          <Check className="h-3.5 w-3.5" weight="bold" />
         </motion.div>
       )}
 
@@ -178,7 +178,7 @@ function PhaseImage({
             animate={{ rotate: 360 }}
             transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
           >
-            <Snowflake className="h-6 w-6 text-danger drop-shadow-md" />
+            <Snowflake className="h-6 w-6 text-danger drop-shadow-md" weight="duotone" />
           </motion.div>
         </div>
       )}

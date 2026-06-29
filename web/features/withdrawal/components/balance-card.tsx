@@ -9,7 +9,7 @@ import { formatUSDC } from "@/lib/format";
 import { useWithdrawals } from "../hooks/use-withdrawals";
 import { WithdrawalModal } from "./withdrawal-modal";
 import type { LedgerEntry } from "@/features/dashboard/types";
-import { Wallet, ArrowDownToLine, AlertTriangle } from "lucide-react";
+import { Wallet, ArrowLineDown, Warning } from "@phosphor-icons/react";
 
 interface BalanceCardProps {
   contractId: string;
@@ -33,7 +33,7 @@ export function BalanceCard({ contractId, ledger, isFrozen }: BalanceCardProps) 
           <CardTitle className="text-sm font-medium text-text-secondary">
             {t("balance.title")}
           </CardTitle>
-          <Wallet className="h-4 w-4 text-text-muted" />
+          <Wallet weight="duotone" className="h-4 w-4 text-text-muted" />
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Available balance */}
@@ -62,7 +62,7 @@ export function BalanceCard({ contractId, ledger, isFrozen }: BalanceCardProps) 
           {/* Frozen warning */}
           {isFrozen && (
             <div className="flex items-center gap-2 rounded-md bg-danger/10 p-2 text-xs text-danger">
-              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              <Warning weight="duotone" className="h-3.5 w-3.5 shrink-0" />
               {t("balance.frozenWarning")}
             </div>
           )}
@@ -73,7 +73,7 @@ export function BalanceCard({ contractId, ledger, isFrozen }: BalanceCardProps) 
             onClick={() => setShowModal(true)}
             disabled={availableBalance <= 0 || isFrozen}
           >
-            <ArrowDownToLine className="h-4 w-4" />
+            <ArrowLineDown weight="duotone" className="h-4 w-4" />
             {availableBalance <= 0 ? t("balance.noFunds") : t("balance.withdraw")}
           </Button>
         </CardContent>

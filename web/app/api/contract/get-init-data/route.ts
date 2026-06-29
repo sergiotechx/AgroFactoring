@@ -61,6 +61,17 @@ export async function POST(request: Request) {
       );
     }
 
+    // Basic Stellar public key format: G + 55 base32 chars = 56 total
+    if (!/^G[A-Z2-7]{55}$/.test(farmer.wallet_address)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "La wallet del agricultor no es una dirección Stellar válida. Actualice el perfil con una dirección real.",
+        },
+        { status: 422 }
+      );
+    }
+
     const { data: phase1, error: phaseError } = await supabase
       .from("crop_phases_budget")
       .select("amount_requested")

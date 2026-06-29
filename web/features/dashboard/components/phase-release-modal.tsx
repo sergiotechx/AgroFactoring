@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatUSDC, formatTxHash } from "@/lib/format";
 import type { Phase, Profile } from "@/features/dashboard/types";
-import { Loader2 } from "lucide-react";
+import { SpinnerGap } from "@phosphor-icons/react";
 
 interface PhaseReleaseModalProps {
   open: boolean;
@@ -84,7 +84,7 @@ export function PhaseReleaseModal({
           <Button onClick={onConfirm} disabled={isPending}>
             {isPending ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <SpinnerGap className="mr-2 h-4 w-4 animate-spin" />
                 {t("release.confirming")}
               </>
             ) : (

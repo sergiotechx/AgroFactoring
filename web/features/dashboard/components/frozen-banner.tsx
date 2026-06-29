@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { motion } from "motion/react";
-import { Snowflake, ShieldAlert } from "lucide-react";
+import { ShieldWarning } from "@phosphor-icons/react";
 
 export function FrozenBanner() {
   const t = useTranslations("disaster");
@@ -15,8 +16,8 @@ export function FrozenBanner() {
       className="rounded-lg border border-danger/40 bg-gradient-to-r from-danger/10 via-danger/5 to-danger/10 p-4"
     >
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-danger/15 flex-shrink-0">
-          <Snowflake className="h-5 w-5 text-danger" />
+        <div className="flex h-16 w-16 items-center justify-center flex-shrink-0">
+          <Image src="/disaster.png" alt="" width={72} height={72} className="object-contain drop-shadow-md" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -33,7 +34,7 @@ export function FrozenBanner() {
           </p>
         </div>
         <div className="hidden sm:flex items-center gap-1.5 rounded-full bg-danger/10 px-3 py-1.5">
-          <ShieldAlert className="h-3.5 w-3.5 text-danger" />
+          <ShieldWarning className="h-3.5 w-3.5 text-danger" weight="duotone" />
           <span className="text-xs font-medium text-danger">
             {t("frozen.rescueFund")}
           </span>

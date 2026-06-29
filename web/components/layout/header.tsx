@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Menu, Globe } from "lucide-react";
+import { List, Globe } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { setLocale } from "@/i18n/actions";
 import { useRouter } from "next/navigation";
@@ -39,7 +39,7 @@ export function Header({ onMenuClick, title }: HeaderProps) {
         className="lg:hidden"
         onClick={onMenuClick}
       >
-        <Menu className="h-5 w-5" />
+        <List className="h-5 w-5" weight="duotone" />
         <span className="sr-only">Menu</span>
       </Button>
 
@@ -62,7 +62,7 @@ export function Header({ onMenuClick, title }: HeaderProps) {
         disabled={isPending}
         className="gap-1.5 text-text-secondary"
       >
-        <Globe className="h-4 w-4" />
+        <Globe className="h-4 w-4" weight="duotone" />
         <span className="text-xs font-semibold">
           {t(`language.${currentLang === "es" ? "en" : "es"}`)}
         </span>

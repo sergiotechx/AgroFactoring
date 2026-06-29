@@ -8,7 +8,7 @@ import { useContracts, useDashboard } from "@/features/dashboard/hooks/use-dashb
 import { PhaseLedger } from "@/features/dashboard/components/phase-ledger";
 import { DashboardSkeleton } from "@/features/dashboard/components/skeletons/dashboard-skeleton";
 import { formatUSDC, formatDate } from "@/lib/format";
-import { AlertTriangle, RefreshCw, Database, Calendar, Hash, DollarSign } from "lucide-react";
+import { Warning, ArrowsClockwise, Database, Calendar, Hash, CurrencyDollar } from "@phosphor-icons/react";
 
 export default function ExporterDataPage() {
   const t = useTranslations("common");
@@ -29,12 +29,12 @@ export default function ExporterDataPage() {
         <h1 className="text-2xl font-bold">{t("nav.data")}</h1>
         <Card className="border-danger/30">
           <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
-            <AlertTriangle className="h-10 w-10 text-danger" />
+            <Warning weight="duotone" className="h-10 w-10 text-danger" />
             <p className="text-sm text-text-muted">
               {error instanceof Error ? error.message : tDash("error.description")}
             </p>
             <Button variant="outline" size="sm" onClick={() => { contractsQuery.refetch(); dashboardQuery.refetch(); }}>
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <ArrowsClockwise weight="duotone" className="mr-2 h-4 w-4" />
               {tDash("error.retry")}
             </Button>
           </CardContent>
@@ -73,7 +73,7 @@ export default function ExporterDataPage() {
             <CardTitle className="text-sm font-medium text-text-secondary">
               {tDash("metrics.contractId")}
             </CardTitle>
-            <Hash className="h-4 w-4 text-text-muted" />
+            <Hash weight="duotone" className="h-4 w-4 text-text-muted" />
           </CardHeader>
           <CardContent>
             <p className="text-sm font-mono truncate">{contract.id}</p>
@@ -85,7 +85,7 @@ export default function ExporterDataPage() {
             <CardTitle className="text-sm font-medium text-text-secondary">
               {tDash("metrics.totalInCustody")}
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-text-muted" />
+            <CurrencyDollar weight="duotone" className="h-4 w-4 text-text-muted" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold tabular-nums">{formatUSDC(contract.total_amount)}</p>
@@ -97,7 +97,7 @@ export default function ExporterDataPage() {
             <CardTitle className="text-sm font-medium text-text-secondary">
               {tDash("metrics.totalReleased")}
             </CardTitle>
-            <Database className="h-4 w-4 text-text-muted" />
+            <Database weight="duotone" className="h-4 w-4 text-text-muted" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold tabular-nums">{formatUSDC(totalReleased)}</p>
@@ -110,7 +110,7 @@ export default function ExporterDataPage() {
             <CardTitle className="text-sm font-medium text-text-secondary">
               {tDash("metrics.createdAt")}
             </CardTitle>
-            <Calendar className="h-4 w-4 text-text-muted" />
+            <Calendar weight="duotone" className="h-4 w-4 text-text-muted" />
           </CardHeader>
           <CardContent>
             <p className="text-sm font-medium">{formatDate(contract.created_at)}</p>

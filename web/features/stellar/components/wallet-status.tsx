@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useFreighter } from "@/features/stellar/hooks/use-freighter";
 import { formatTxHash } from "@/lib/format";
-import { Wallet, AlertTriangle, ExternalLink } from "lucide-react";
+import { Wallet, Warning, ArrowSquareOut } from "@phosphor-icons/react";
 import { useState } from "react";
 
 export function WalletStatus() {
@@ -47,9 +47,9 @@ export function WalletStatus() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-md border border-warning/40 bg-warning/10 px-3 py-1.5 text-xs font-medium text-warning transition-colors hover:bg-warning/20"
           >
-            <Wallet className="h-3.5 w-3.5" />
+            <Wallet weight="duotone" className="h-3.5 w-3.5" />
             {t("installLink")}
-            <ExternalLink className="h-3 w-3" />
+            <ArrowSquareOut weight="duotone" className="h-3 w-3" />
           </a>
         </TooltipTrigger>
         <TooltipContent>{t("notInstalledDesc")}</TooltipContent>
@@ -61,7 +61,7 @@ export function WalletStatus() {
   if (connected && !isCorrectNetwork) {
     return (
       <div className="inline-flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-1.5">
-        <AlertTriangle className="h-3.5 w-3.5 text-warning" />
+        <Warning weight="duotone" className="h-3.5 w-3.5 text-warning" />
         <span className="text-xs font-medium text-warning">
           {t("wrongNetwork")}
         </span>
@@ -98,7 +98,7 @@ export function WalletStatus() {
       disabled={connecting}
       className="gap-1.5 border-accent/40 text-accent hover:bg-accent/5"
     >
-      <Wallet className="h-3.5 w-3.5" />
+      <Wallet weight="duotone" className="h-3.5 w-3.5" />
       {connecting ? t("connecting") : t("connect")}
     </Button>
   );

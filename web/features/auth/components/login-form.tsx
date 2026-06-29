@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { AlertTriangle, Loader2, Lock, User } from "lucide-react";
+import { Warning, SpinnerGap, Lock, User } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,7 +52,7 @@ export function LoginForm() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {login.error && (
             <div className="flex items-start gap-2 rounded-md bg-danger/10 p-3 text-sm text-danger">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <Warning weight="duotone" className="mt-0.5 h-4 w-4 shrink-0" />
               <span>
                 {login.error.message === "Credenciales invalidas" ||
                 login.error.message === "Invalid credentials"
@@ -65,7 +65,7 @@ export function LoginForm() {
           <div className="space-y-2">
             <Label htmlFor="username">{t("username")}</Label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+              <User weight="duotone" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
               <Input
                 id="username"
                 placeholder={t("usernamePlaceholder")}
@@ -84,7 +84,7 @@ export function LoginForm() {
           <div className="space-y-2">
             <Label htmlFor="password">{t("password")}</Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+              <Lock weight="duotone" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
               <Input
                 id="password"
                 type="password"
@@ -108,7 +108,7 @@ export function LoginForm() {
           >
             {login.isPending ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <SpinnerGap className="h-4 w-4 animate-spin" />
                 {t("submitting")}
               </>
             ) : (

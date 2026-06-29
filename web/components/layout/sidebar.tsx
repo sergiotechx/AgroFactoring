@@ -5,15 +5,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
-  LayoutDashboard,
+  SquaresFour,
   FileText,
-  Activity,
+  Pulse,
   Database,
-  Sprout,
+  Plant,
   Wallet,
-  LogOut,
+  SignOut,
   X,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -25,15 +25,15 @@ interface SidebarProps {
 }
 
 const exporterNavItems = [
-  { key: "dashboard", href: "/exporter", icon: LayoutDashboard },
+  { key: "dashboard", href: "/exporter", icon: SquaresFour },
   { key: "contract", href: "/exporter/contract", icon: FileText },
-  { key: "emulator", href: "/exporter/emulator", icon: Activity },
+  { key: "emulator", href: "/exporter/emulator", icon: Pulse },
   { key: "data", href: "/exporter/data", icon: Database },
 ];
 
 const farmerNavItems = [
-  { key: "dashboard", href: "/farmer", icon: LayoutDashboard },
-  { key: "myCrop", href: "/farmer/crop", icon: Sprout },
+  { key: "dashboard", href: "/farmer", icon: SquaresFour },
+  { key: "myCrop", href: "/farmer/crop", icon: Plant },
   { key: "withdrawal", href: "/farmer/withdrawal", icon: Wallet },
   { key: "data", href: "/farmer/data", icon: Database },
 ];
@@ -111,7 +111,7 @@ export function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                   : "text-sidebar-muted hover:bg-white/5 hover:text-sidebar-foreground"
               )}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className="h-4 w-4" weight="duotone" />
               {t(`nav.${item.key}`)}
             </Link>
           );
@@ -140,7 +140,7 @@ export function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
           disabled={logout.isPending}
           className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-muted transition-colors hover:bg-white/5 hover:text-sidebar-foreground"
         >
-          <LogOut className="h-4 w-4" />
+          <SignOut className="h-4 w-4" weight="duotone" />
           {t("nav.logout")}
         </button>
       </div>

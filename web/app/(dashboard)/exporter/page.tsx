@@ -19,7 +19,8 @@ import {
   useReleasePhase,
 } from "@/features/dashboard/hooks/use-contract-actions";
 import { DEMO_CONTRACT_PLACEHOLDER } from "@/features/dashboard/types";
-import { AlertTriangle, RefreshCw, Rocket, Send } from "lucide-react";
+import Image from "next/image";
+import { Warning, ArrowsClockwise, RocketLaunch, PaperPlaneTilt } from "@phosphor-icons/react";
 
 export default function ExporterPage() {
   const t = useTranslations("common");
@@ -52,7 +53,7 @@ export default function ExporterPage() {
         </div>
         <Card className="border-danger/30">
           <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
-            <AlertTriangle className="h-10 w-10 text-danger" />
+            <Warning weight="duotone" className="h-10 w-10 text-danger" />
             <div className="text-center">
               <p className="font-semibold text-foreground">{tDash("error.title")}</p>
               <p className="mt-1 text-sm text-text-muted">
@@ -67,7 +68,7 @@ export default function ExporterPage() {
                 dashboardQuery.refetch();
               }}
             >
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <ArrowsClockwise weight="duotone" className="mr-2 h-4 w-4" />
               {tDash("error.retry")}
             </Button>
           </CardContent>
@@ -86,6 +87,7 @@ export default function ExporterPage() {
         </div>
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center gap-2 py-12 text-text-muted">
+            <Image src="/empty-field.png" alt="" width={96} height={96} className="object-contain mb-2" />
             <p className="font-medium">{tDash("contract.noContract")}</p>
             <p className="text-sm">{tDash("contract.noContractDesc")}</p>
           </CardContent>
@@ -148,14 +150,14 @@ export default function ExporterPage() {
             <div className="mt-6 flex justify-center">
               {needsInit && (
                 <Button onClick={() => setShowInitModal(true)} className="gap-2">
-                  <Rocket className="h-4 w-4" />
+                  <RocketLaunch weight="duotone" className="h-4 w-4" />
                   {tDash("contract.initializeContract")}
                 </Button>
               )}
 
               {canRelease && currentPhaseData && (
                 <Button onClick={() => setShowReleaseModal(true)} className="gap-2">
-                  <Send className="h-4 w-4" />
+                  <PaperPlaneTilt weight="duotone" className="h-4 w-4" />
                   {tPhases("actions.releasePhase", {
                     number: contract.current_phase,
                   })}
