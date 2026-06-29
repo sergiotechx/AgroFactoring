@@ -10,6 +10,7 @@ import {
   Activity,
   Database,
   Sprout,
+  Wallet,
   LogOut,
   X,
 } from "lucide-react";
@@ -33,6 +34,7 @@ const exporterNavItems = [
 const farmerNavItems = [
   { key: "dashboard", href: "/farmer", icon: LayoutDashboard },
   { key: "myCrop", href: "/farmer/crop", icon: Sprout },
+  { key: "withdrawal", href: "/farmer/withdrawal", icon: Wallet },
   { key: "data", href: "/farmer/data", icon: Database },
 ];
 
