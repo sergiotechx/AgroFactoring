@@ -1,0 +1,44 @@
+{
+  "balance": {
+    "title": "Balance Disponible",
+    "available": "Disponible para retiro",
+    "released": "Total Liberado",
+    "withdrawn": "Total Retirado",
+    "withdraw": "Retirar Fondos",
+    "noFunds": "Sin fondos disponibles",
+    "frozenWarning": "Retiros deshabilitados — contrato congelado"
+  },
+  "modal": {
+    "title": "Retirar Fondos",
+    "disclaimer": "Simulacion — No se realizara una transferencia real",
+    "amount": "Monto a retirar",
+    "amountPlaceholder": "0.00",
+    "amountMax": "Maximo: {max}",
+    "bank": "Banco destino",
+    "bankPlaceholder": "Seleccionar banco",
+    "accountLast4": "Ultimos 4 digitos de cuenta",
+    "accountLast4Placeholder": "1234",
+    "confirm": "Confirmar Retiro",
+    "processing": "Procesando...",
+    "success": "Fondos Transferidos",
+    "successDesc": "{amount} enviados a {bank} ****{last4}"
+  },
+  "history": {
+    "title": "Historial de Retiros",
+    "empty": "No hay retiros registrados",
+    "date": "Fecha",
+    "amount": "Monto",
+    "bank": "Banco",
+    "account": "Cuenta",
+    "status": "Estado",
+    "completed": "Completado"
+  },
+  "validation": {
+    "amountRequired": "El monto es requerido",
+    "amountMin": "El monto minimo es $1",
+    "amountMax": "El monto excede el balance disponible",
+    "bankRequired": "Selecciona un banco",
+    "accountRequired": "Los ultimos 4 digitos son requeridos",
+    "accountLength": "Debe tener exactamente 4 digitos"
+  }
+}

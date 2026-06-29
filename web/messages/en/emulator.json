@@ -28,5 +28,6 @@
     "soilMoisture": "Soil Moisture (%)",
     "submit": "Record Reading",
     "success": "IoT reading recorded"
-  }
+  },
+  "error": "An unexpected error occurred"
 }

@@ -104,3 +104,5 @@ export interface ApiErrorResponse {
   error: string;
   detail?: string;
 }
+
+export const DEMO_CONTRACT_PLACEHOLDER = "CONTRATO_DEMO_AQUI_SE_CAMBIARA_DESPUES";

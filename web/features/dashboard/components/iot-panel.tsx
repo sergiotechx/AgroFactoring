@@ -49,7 +49,7 @@ export function IoTPanel({ contractId, disabled }: IoTPanelProps) {
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: (err) => {
-      toast.error(err instanceof Error ? err.message : "Error");
+      toast.error(err instanceof Error ? err.message : t("error"));
     },
   });
 

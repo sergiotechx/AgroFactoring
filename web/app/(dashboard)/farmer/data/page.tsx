@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useContracts, useDashboard } from "@/features/dashboard/hooks/use-dashboard";
 import { PhaseLedger } from "@/features/dashboard/components/phase-ledger";
 import { DashboardSkeleton } from "@/features/dashboard/components/skeletons/dashboard-skeleton";
+import { FrozenBanner } from "@/features/dashboard/components/frozen-banner";
 import { formatUSDC, formatDate } from "@/lib/format";
 import { AlertTriangle, RefreshCw, Database, Calendar, Hash } from "lucide-react";
 
@@ -57,6 +58,7 @@ export default function FarmerDataPage() {
   }
 
   const { contract, phases, ledger } = dashboardQuery.data;
+  const isFrozen = contract.status === "frozen";
   const totalReleased = ledger.reduce((sum, e) => sum + e.amount_released, 0);
 
   return (
@@ -65,6 +67,8 @@ export default function FarmerDataPage() {
         <h1 className="text-2xl font-bold">{t("nav.data")}</h1>
         <Badge variant="success">{t("roles.farmer")}</Badge>
       </div>
+
+      {isFrozen && <FrozenBanner />}
 
       {/* Contract summary cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiPost } from "@/lib/api-client";
 import { useFreighter } from "@/features/stellar/hooks/use-freighter";
@@ -9,7 +9,7 @@ import {
   buildReleasePhaseTx,
   submitAndConfirm,
 } from "@/features/stellar/utils/transaction-builder";
-import type { TxStatus } from "@/features/stellar/types";
+import type { TxStatus, TxStep } from "@/features/stellar/types";
 import type { InitDataResponse, ReleaseDataResponse } from "@/features/dashboard/types";
 
 function useTxFlow() {
@@ -18,19 +18,37 @@ function useTxFlow() {
     message: "",
   });
   const [showModal, setShowModal] = useState(false);
+  const lastStepRef = useRef<TxStep>("idle");
+
+  const trackSetStatus = useCallback((newStatus: TxStatus) => {
+    if (newStatus.step !== "error") {
+      lastStepRef.current = newStatus.step;
+    }
+    setStatus(newStatus);
+  }, []);
+
+  const setError = useCallback((message: string, error: string) => {
+    setStatus({
+      step: "error",
+      message,
+      error,
+      errorAtStep: lastStepRef.current,
+    });
+  }, []);
 
   const reset = useCallback(() => {
+    lastStepRef.current = "idle";
     setStatus({ step: "idle", message: "" });
     setShowModal(false);
   }, []);
 
-  return { status, setStatus, showModal, setShowModal, reset };
+  return { status, setStatus: trackSetStatus, setError, showModal, setShowModal, reset };
 }
 
 export function useInitContract() {
   const { address, sign } = useFreighter();
   const queryClient = useQueryClient();
-  const { status, setStatus, showModal, setShowModal, reset } = useTxFlow();
+  const { status, setStatus, setError, showModal, setShowModal, reset } = useTxFlow();
 
   const execute = useCallback(
     async (contractId: string, cropId: string, exporterId: string) => {
@@ -61,10 +79,10 @@ export function useInitContract() {
 
         // 4. Submit + poll
         setStatus({ step: "submitting", message: "Submitting transaction..." });
-        setStatus({ step: "confirming", message: "Waiting for confirmation..." });
         const txHash = await submitAndConfirm(signedXdr);
 
         // 5. Confirm in backend
+        setStatus({ step: "confirming", message: "Waiting for confirmation..." });
         await apiPost("/api/contract/confirm-on-chain", {
           contract_id: contractId,
           tx_type: "init",
@@ -77,10 +95,10 @@ export function useInitContract() {
         queryClient.invalidateQueries({ queryKey: ["contracts"] });
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
-        setStatus({ step: "error", message: "Transaction failed", error: message });
+        setError("Transaction failed", message);
       }
     },
-    [address, sign, setStatus, setShowModal, queryClient]
+    [address, sign, setStatus, setError, setShowModal, queryClient]
   );
 
   return { status, showModal, execute, reset };
@@ -89,7 +107,7 @@ export function useInitContract() {
 export function useReleasePhase() {
   const { address, sign } = useFreighter();
   const queryClient = useQueryClient();
-  const { status, setStatus, showModal, setShowModal, reset } = useTxFlow();
+  const { status, setStatus, setError, showModal, setShowModal, reset } = useTxFlow();
 
   const execute = useCallback(
     async (contractId: string) => {
@@ -118,10 +136,10 @@ export function useReleasePhase() {
 
         // 4. Submit + poll
         setStatus({ step: "submitting", message: "Submitting transaction..." });
-        setStatus({ step: "confirming", message: "Waiting for confirmation..." });
         const txHash = await submitAndConfirm(signedXdr);
 
         // 5. Confirm in backend
+        setStatus({ step: "confirming", message: "Waiting for confirmation..." });
         await apiPost("/api/contract/confirm-on-chain", {
           contract_id: contractId,
           tx_type: "release",
@@ -134,10 +152,10 @@ export function useReleasePhase() {
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
-        setStatus({ step: "error", message: "Transaction failed", error: message });
+        setError("Transaction failed", message);
       }
     },
-    [address, sign, setStatus, setShowModal, queryClient]
+    [address, sign, setStatus, setError, setShowModal, queryClient]
   );
 
   return { status, showModal, execute, reset };

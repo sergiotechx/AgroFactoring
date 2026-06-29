@@ -34,7 +34,7 @@ export default function DashboardLayout({
       />
       <div className="lg:pl-64">
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="mx-auto max-w-6xl p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

@@ -10,6 +10,8 @@ import { PhaseTimeline } from "@/features/dashboard/components/phase-timeline";
 import { PhaseLedger } from "@/features/dashboard/components/phase-ledger";
 import { DashboardSkeleton } from "@/features/dashboard/components/skeletons/dashboard-skeleton";
 import { FrozenBanner } from "@/features/dashboard/components/frozen-banner";
+import { BalanceCard } from "@/features/withdrawal/components/balance-card";
+import { WithdrawalHistory } from "@/features/withdrawal/components/withdrawal-history";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
 export default function FarmerPage() {
@@ -95,6 +97,13 @@ export default function FarmerPage() {
       {/* Metrics Grid */}
       <ContractOverview data={data} role="farmer" />
 
+      {/* Withdrawal Balance */}
+      <BalanceCard
+        contractId={contractId}
+        ledger={data.ledger}
+        isFrozen={isFrozen}
+      />
+
       {/* Phase Timeline (read-only) */}
       <Card className={isFrozen ? "border-danger/20" : undefined}>
         <CardContent className="p-6">
@@ -109,6 +118,9 @@ export default function FarmerPage() {
 
       {/* Phase Ledger (read-only) */}
       <PhaseLedger ledger={data.ledger} phases={data.phases} />
+
+      {/* Withdrawal History */}
+      <WithdrawalHistory contractId={contractId} />
     </div>
   );
 }

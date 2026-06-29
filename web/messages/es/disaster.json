@@ -23,5 +23,6 @@
     "signing": "Firmando transaccion del oraculo...",
     "sending": "Enviando trigger_disaster...",
     "confirming": "Esperando confirmacion on-chain..."
-  }
+  },
+  "error": "Ocurrio un error inesperado"
 }

@@ -13,6 +13,7 @@ export interface TxStatus {
   message: string;
   txHash?: string;
   error?: string;
+  errorAtStep?: TxStep;
 }
 
 export const TX_STEPS_ORDER: TxStep[] = [

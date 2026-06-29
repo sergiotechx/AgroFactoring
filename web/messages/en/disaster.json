@@ -23,5 +23,6 @@
     "signing": "Signing oracle transaction...",
     "sending": "Sending trigger_disaster...",
     "confirming": "Waiting for on-chain confirmation..."
-  }
+  },
+  "error": "An unexpected error occurred"
 }

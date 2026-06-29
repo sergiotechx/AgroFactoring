@@ -108,7 +108,12 @@ export async function submitAndConfirm(signedXdr: string): Promise<string> {
   const txHash = response.hash;
   let getResponse = await rpc.getTransaction(txHash);
 
+  const MAX_POLL_ATTEMPTS = 30;
+  let attempts = 0;
   while (getResponse.status === "NOT_FOUND") {
+    if (++attempts > MAX_POLL_ATTEMPTS) {
+      throw new Error("Transaction confirmation timed out after 60 seconds");
+    }
     await new Promise((resolve) => setTimeout(resolve, 2000));
     getResponse = await rpc.getTransaction(txHash);
   }

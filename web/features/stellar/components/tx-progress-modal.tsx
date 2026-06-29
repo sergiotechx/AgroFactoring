@@ -37,17 +37,15 @@ const stepMessageKeys: Record<string, string> = {
 
 function getStepState(
   step: TxStep,
-  currentStep: TxStep
+  currentStep: TxStep,
+  errorAtStep?: TxStep
 ): "completed" | "active" | "pending" | "error" {
-  if (currentStep === "error") {
-    const currentIdx = TX_STEPS_ORDER.indexOf(step);
-    const errorIdx = TX_STEPS_ORDER.findIndex(
-      (_, i) => i >= currentIdx
-    );
-    // Mark all steps before the current position as completed
-    // The first unfinished step is the error step
-    if (currentIdx < errorIdx) return "completed";
-    if (currentIdx === errorIdx) return "error";
+  if (currentStep === "error" && errorAtStep) {
+    const stepIdx = TX_STEPS_ORDER.indexOf(step);
+    const errorIdx = TX_STEPS_ORDER.indexOf(errorAtStep);
+
+    if (stepIdx < errorIdx) return "completed";
+    if (stepIdx === errorIdx) return "error";
     return "pending";
   }
 
@@ -93,7 +91,7 @@ export function TxProgressModal({
         {/* Steps */}
         <div className="space-y-3 py-4">
           {TX_STEPS_ORDER.map((step) => {
-            const state = getStepState(step, status.step);
+            const state = getStepState(step, status.step, status.errorAtStep);
             const key = stepMessageKeys[step];
 
             return (

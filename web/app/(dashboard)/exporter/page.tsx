@@ -12,16 +12,13 @@ import { PhaseLedger } from "@/features/dashboard/components/phase-ledger";
 import { DashboardSkeleton } from "@/features/dashboard/components/skeletons/dashboard-skeleton";
 import { ContractInitModal } from "@/features/dashboard/components/contract-init-modal";
 import { PhaseReleaseModal } from "@/features/dashboard/components/phase-release-modal";
-import { EmulatorControls } from "@/features/dashboard/components/emulator-controls";
-import { WeatherPanel } from "@/features/dashboard/components/weather-panel";
-import { IoTPanel } from "@/features/dashboard/components/iot-panel";
-import { DisasterTrigger } from "@/features/dashboard/components/disaster-trigger";
 import { FrozenBanner } from "@/features/dashboard/components/frozen-banner";
 import { TxProgressModal } from "@/features/stellar/components/tx-progress-modal";
 import {
   useInitContract,
   useReleasePhase,
 } from "@/features/dashboard/hooks/use-contract-actions";
+import { DEMO_CONTRACT_PLACEHOLDER } from "@/features/dashboard/types";
 import { AlertTriangle, RefreshCw, Rocket, Send } from "lucide-react";
 
 export default function ExporterPage() {
@@ -102,7 +99,7 @@ export default function ExporterPage() {
   const isFrozen = contract.status === "frozen";
   const needsInit =
     contract.stellar_contract_id === null ||
-    contract.stellar_contract_id === "CONTRATO_DEMO_AQUI_SE_CAMBIARA_DESPUES";
+    contract.stellar_contract_id === DEMO_CONTRACT_PLACEHOLDER;
   const canRelease = !needsInit && contract.status === "active";
   const currentPhaseData = data.phases.find(
     (p) => p.phase_number === contract.current_phase
@@ -172,17 +169,6 @@ export default function ExporterPage() {
       {/* Phase Ledger */}
       <PhaseLedger ledger={data.ledger} phases={data.phases} />
 
-      {/* Emulator + Data Panels */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <EmulatorControls contract={contract} />
-        <WeatherPanel contractId={contractId} disabled={isFrozen} />
-        <IoTPanel contractId={contractId} disabled={isFrozen} />
-      </div>
-
-      {/* Disaster Trigger — only when contract is active */}
-      {!isFrozen && contract.status === "active" && (
-        <DisasterTrigger contractId={contractId} />
-      )}
 
       {/* Init Modal */}
       <ContractInitModal

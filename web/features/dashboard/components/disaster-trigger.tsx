@@ -69,7 +69,7 @@ export function DisasterTrigger({
       onDisasterConfirmed?.();
     },
     onError: (err) => {
-      toast.error(err instanceof Error ? err.message : "Error");
+      toast.error(err instanceof Error ? err.message : t("error"));
     },
   });
 

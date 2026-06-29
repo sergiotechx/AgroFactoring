@@ -50,7 +50,7 @@ export function EmulatorControls({ contract }: EmulatorControlsProps) {
       }
     },
     onError: (err) => {
-      toast.error(err instanceof Error ? err.message : "Error");
+      toast.error(err instanceof Error ? err.message : t("error"));
     },
   });
 

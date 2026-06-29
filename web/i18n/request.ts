@@ -19,6 +19,7 @@ export default getRequestConfig(async () => {
     wallet: (await import(`../messages/${locale}/wallet.json`)).default,
     emulator: (await import(`../messages/${locale}/emulator.json`)).default,
     disaster: (await import(`../messages/${locale}/disaster.json`)).default,
+    withdrawal: (await import(`../messages/${locale}/withdrawal.json`)).default,
   };
 
   return { locale, messages };

@@ -1,0 +1,44 @@
+{
+  "balance": {
+    "title": "Available Balance",
+    "available": "Available for withdrawal",
+    "released": "Total Released",
+    "withdrawn": "Total Withdrawn",
+    "withdraw": "Withdraw Funds",
+    "noFunds": "No funds available",
+    "frozenWarning": "Withdrawals disabled — contract frozen"
+  },
+  "modal": {
+    "title": "Withdraw Funds",
+    "disclaimer": "Simulation — No real transfer will be made",
+    "amount": "Amount to withdraw",
+    "amountPlaceholder": "0.00",
+    "amountMax": "Maximum: {max}",
+    "bank": "Destination bank",
+    "bankPlaceholder": "Select bank",
+    "accountLast4": "Last 4 digits of account",
+    "accountLast4Placeholder": "1234",
+    "confirm": "Confirm Withdrawal",
+    "processing": "Processing...",
+    "success": "Funds Transferred",
+    "successDesc": "{amount} sent to {bank} ****{last4}"
+  },
+  "history": {
+    "title": "Withdrawal History",
+    "empty": "No withdrawals recorded",
+    "date": "Date",
+    "amount": "Amount",
+    "bank": "Bank",
+    "account": "Account",
+    "status": "Status",
+    "completed": "Completed"
+  },
+  "validation": {
+    "amountRequired": "Amount is required",
+    "amountMin": "Minimum amount is $1",
+    "amountMax": "Amount exceeds available balance",
+    "bankRequired": "Please select a bank",
+    "accountRequired": "Last 4 digits are required",
+    "accountLength": "Must be exactly 4 digits"
+  }
+}

@@ -49,7 +49,7 @@ export function WeatherPanel({ contractId, disabled }: WeatherPanelProps) {
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: (err) => {
-      toast.error(err instanceof Error ? err.message : "Error");
+      toast.error(err instanceof Error ? err.message : t("error"));
     },
   });
 

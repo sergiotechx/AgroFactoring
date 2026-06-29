@@ -69,7 +69,7 @@ export function PhaseLedger({ ledger, phases }: PhaseLedgerProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-accent hover:text-accent-hover font-mono text-sm transition-colors"
-                  title={t("ledger.viewOnExplorer")}
+                  aria-label={t("ledger.viewOnExplorer")}
                 >
                   {formatTxHash(entry.tx_hash)}
                   <ExternalLink className="h-3 w-3" />

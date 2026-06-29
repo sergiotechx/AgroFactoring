@@ -18,6 +18,7 @@ import {
   useInitContract,
   useReleasePhase,
 } from "@/features/dashboard/hooks/use-contract-actions";
+import { DEMO_CONTRACT_PLACEHOLDER } from "@/features/dashboard/types";
 import { formatUSDC, formatDate } from "@/lib/format";
 import {
   AlertTriangle,
@@ -96,7 +97,7 @@ export default function ExporterContractPage() {
   const isFrozen = contract.status === "frozen";
   const needsInit =
     contract.stellar_contract_id === null ||
-    contract.stellar_contract_id === "CONTRATO_DEMO_AQUI_SE_CAMBIARA_DESPUES";
+    contract.stellar_contract_id === DEMO_CONTRACT_PLACEHOLDER;
   const canRelease = !needsInit && contract.status === "active";
   const currentPhaseData = phases.find(
     (p) => p.phase_number === contract.current_phase

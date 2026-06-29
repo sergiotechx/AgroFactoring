@@ -5,9 +5,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
+interface ErrorBoundaryLabels {
+  title: string;
+  fallbackMessage: string;
+  retry: string;
+}
+
+const DEFAULT_LABELS: ErrorBoundaryLabels = {
+  title: "Something went wrong",
+  fallbackMessage: "An unexpected error occurred",
+  retry: "Retry",
+};
+
 interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
+  labels?: ErrorBoundaryLabels;
 }
 
 interface ErrorBoundaryState {
@@ -34,14 +47,16 @@ export class ErrorBoundary extends Component<
         return this.props.fallback;
       }
 
+      const labels = this.props.labels ?? DEFAULT_LABELS;
+
       return (
         <Card className="border-danger/30">
           <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
             <AlertTriangle className="h-10 w-10 text-danger" />
             <div>
-              <p className="font-semibold">Algo salio mal</p>
+              <p className="font-semibold">{labels.title}</p>
               <p className="mt-1 text-sm text-text-muted">
-                {this.state.error?.message || "Error inesperado"}
+                {this.state.error?.message || labels.fallbackMessage}
               </p>
             </div>
             <Button
@@ -50,7 +65,7 @@ export class ErrorBoundary extends Component<
               onClick={() => this.setState({ hasError: false, error: null })}
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              Reintentar
+              {labels.retry}
             </Button>
           </CardContent>
         </Card>

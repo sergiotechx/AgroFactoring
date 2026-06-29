@@ -9,16 +9,19 @@ export function formatUSDC(amount: number): string {
   return usdFormatter.format(amount);
 }
 
-const dateFormatter = new Intl.DateTimeFormat("es-CO", {
+const dateFormatOptions: Intl.DateTimeFormatOptions = {
   year: "numeric",
   month: "short",
   day: "numeric",
   hour: "2-digit",
   minute: "2-digit",
-});
+};
 
-export function formatDate(isoDate: string): string {
-  return dateFormatter.format(new Date(isoDate));
+export function formatDate(isoDate: string, locale: string = "es"): string {
+  const resolvedLocale = locale === "en" ? "en-US" : "es-CO";
+  return new Intl.DateTimeFormat(resolvedLocale, dateFormatOptions).format(
+    new Date(isoDate)
+  );
 }
 
 export function formatTxHash(hash: string): string {
