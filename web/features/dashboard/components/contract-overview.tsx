@@ -1,0 +1,175 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { formatUSDC } from "@/lib/format";
+import type { DashboardState } from "@/features/dashboard/types";
+import {
+  DollarSign,
+  Layers,
+  ShieldCheck,
+  Sprout,
+  Weight,
+  Users,
+} from "lucide-react";
+import { motion } from "motion/react";
+
+interface ContractOverviewProps {
+  data: DashboardState;
+  role: "exporter" | "farmer";
+}
+
+const statusVariant = {
+  active: "success",
+  frozen: "danger",
+  completed: "default",
+} as const;
+
+export function ContractOverview({ data, role }: ContractOverviewProps) {
+  const t = useTranslations("dashboard");
+  const tStatus = useTranslations("common.status");
+
+  const { contract, crop, farmer, exporter, phases } = data;
+  const totalPhases = phases.length || 5;
+  const progressPercent = Math.max(
+    0,
+    ((contract.current_phase - 1) / totalPhases) * 100
+  );
+
+  const counterpart = role === "exporter" ? farmer : exporter;
+
+  const cards = [
+    // Total in Custody / Funds Received
+    <Card key="total">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-text-secondary">
+          {role === "exporter"
+            ? t("metrics.totalInCustody")
+            : t("metrics.fundsReceived")}
+        </CardTitle>
+        <DollarSign className="h-4 w-4 text-text-muted" />
+      </CardHeader>
+      <CardContent>
+        <p className="text-2xl font-bold tabular-nums">
+          {formatUSDC(contract.total_amount)}
+        </p>
+        <p className="mt-1 text-xs text-text-muted">USDC</p>
+      </CardContent>
+    </Card>,
+
+    // Current Phase
+    <Card key="phase">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-text-secondary">
+          {t("metrics.currentPhase")}
+        </CardTitle>
+        <Layers className="h-4 w-4 text-text-muted" />
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-baseline gap-1">
+          <span className="text-2xl font-bold tabular-nums">
+            {contract.current_phase}
+          </span>
+          <span className="text-sm text-text-muted">
+            {t("metrics.ofPhases", { total: totalPhases })}
+          </span>
+        </div>
+        <Progress value={progressPercent} className="mt-3 h-2" />
+      </CardContent>
+    </Card>,
+
+    // Status
+    <Card key="status">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-text-secondary">
+          {t("metrics.status")}
+        </CardTitle>
+        <ShieldCheck className="h-4 w-4 text-text-muted" />
+      </CardHeader>
+      <CardContent>
+        <Badge variant={statusVariant[contract.status]}>
+          {tStatus(contract.status)}
+        </Badge>
+      </CardContent>
+    </Card>,
+
+    // Crop Type
+    ...(crop
+      ? [
+          <Card key="crop">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-text-secondary">
+                {role === "farmer"
+                  ? t("metrics.myCrop")
+                  : t("metrics.cropType")}
+              </CardTitle>
+              <Sprout className="h-4 w-4 text-text-muted" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{crop.crop_type}</p>
+              <p className="mt-1 text-xs text-text-muted">
+                {t("metrics.variety")}: {crop.variety}
+              </p>
+            </CardContent>
+          </Card>,
+        ]
+      : []),
+
+    // Estimated Tons
+    ...(crop
+      ? [
+          <Card key="tons">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-text-secondary">
+                {t("metrics.estimatedTons")}
+              </CardTitle>
+              <Weight className="h-4 w-4 text-text-muted" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold tabular-nums">
+                {crop.estimated_tons}
+              </p>
+              <p className="mt-1 text-xs text-text-muted">ton</p>
+            </CardContent>
+          </Card>,
+        ]
+      : []),
+
+    // Counterpart
+    ...(counterpart
+      ? [
+          <Card key="counterpart">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-text-secondary">
+                {t("metrics.counterpart")}
+              </CardTitle>
+              <Users className="h-4 w-4 text-text-muted" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-lg font-semibold">{counterpart.username}</p>
+              <p className="mt-1 text-xs text-text-muted font-mono truncate">
+                {counterpart.wallet_address}
+              </p>
+            </CardContent>
+          </Card>,
+        ]
+      : []),
+  ];
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {cards.map((card, i) => (
+        <motion.div
+          key={card.key}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: i * 0.06 }}
+        >
+          {card}
+        </motion.div>
+      ))}
+    </div>
+  );
+}

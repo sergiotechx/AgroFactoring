@@ -1,0 +1,32 @@
+{
+  "title": "Agronomic Emulator",
+  "description": "Simulates the passage of time to advance contract phases.",
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "disabled": "Disabled"
+  },
+  "timeLeft": "{minutes} min remaining",
+  "actions": {
+    "start": "Start Emulator",
+    "stop": "Stop Emulator",
+    "starting": "Starting...",
+    "stopping": "Stopping..."
+  },
+  "frozenWarning": "The emulator is disabled because the contract is frozen.",
+  "autoStopped": "The emulator was automatically stopped after reaching the time limit.",
+  "weather": {
+    "title": "Weather Data",
+    "temperature": "Temperature (°C)",
+    "rainfall": "Rainfall (mm)",
+    "submit": "Record Reading",
+    "success": "Reading recorded"
+  },
+  "iot": {
+    "title": "IoT Sensors",
+    "ndvi": "NDVI Index (0-1)",
+    "soilMoisture": "Soil Moisture (%)",
+    "submit": "Record Reading",
+    "success": "IoT reading recorded"
+  }
+}
