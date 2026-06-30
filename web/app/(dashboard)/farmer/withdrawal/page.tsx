@@ -75,11 +75,12 @@ export default function FarmerWithdrawalPage() {
       <BalanceCard
         contractId={contractId}
         ledger={data.ledger}
+        withdrawals={data.withdrawals}
         isFrozen={isFrozen}
       />
 
       {/* Withdrawal History */}
-      <WithdrawalHistory contractId={contractId} />
+      <WithdrawalHistory withdrawals={data.withdrawals} />
     </div>
   );
 }

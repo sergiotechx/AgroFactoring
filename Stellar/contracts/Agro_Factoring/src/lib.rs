@@ -32,7 +32,8 @@ pub struct EscrowData {
     pub total_amount: i128,       // total USDC deposited upfront
     pub current_phase: u32,       // last successfully released phase (0 = none yet)
     pub amount_per_phase: i128,   // USDC released on each phase
-    pub released_amount: i128,    // cumulative USDC released to the farmer
+    pub released_amount: i128,    // cumulative USDC enabled (habilitado) for withdrawal
+    pub withdrawn_amount: i128,   // cumulative USDC actually withdrawn by the farmer
     pub status: EscrowStatus,     // current lifecycle status
     pub usdc_address: Address,    // USDC token contract used for transfers
 }
@@ -151,6 +152,7 @@ impl Contract {
             current_phase: 0,
             amount_per_phase,
             released_amount: 0,
+            withdrawn_amount: 0,
             status: EscrowStatus::Active,
             usdc_address,
         };
@@ -166,10 +168,11 @@ impl Contract {
         Ok(())
     }
 
-    // Release a single phase of USDC to the farmer. Only the exporter can
-    // authorize releases, phases must be released in strict ascending order,
-    // and the escrow must be Active. When the last phase is released the
-    // status flips to Completed.
+    // Release a single phase: enables `amount_per_phase` USDC for the farmer
+    // to withdraw. Only the exporter can authorize releases, phases must be
+    // released in strict ascending order, and the escrow must be Active.
+    // Funds stay in the contract until the farmer calls `withdraw`. When the
+    // last phase is released the status flips to Completed.
     pub fn release_phase(
         env: Env,
         crop_id: u64,
@@ -216,15 +219,12 @@ impl Contract {
             return Err(ContractError::InvalidAmount);
         }
 
-        // Transfer `amount` USDC from the contract custody to the farmer.
-        let token = TokenClient::new(&env, &escrow.usdc_address);
-        token.transfer(&env.current_contract_address(), &escrow.farmer, &amount);
-
-        // Update progress tracking.
+        // Update progress tracking. Funds remain in the contract custody
+        // until the farmer explicitly withdraws them.
         escrow.current_phase = phase_number;
         escrow.released_amount = new_released;
 
-        // If everything has been disbursed, mark the escrow as Completed.
+        // If everything has been enabled, mark the escrow as Completed.
         if new_released == escrow.total_amount {
             escrow.status = EscrowStatus::Completed;
         }
@@ -295,7 +295,7 @@ impl Contract {
             .ok_or(ContractError::EscrowNotFound)?;
 
         // Return unreleased funds to the exporter.
-        let remaining = escrow.total_amount - escrow.released_amount;
+        let remaining = escrow.total_amount - escrow.withdrawn_amount;
         if remaining > 0 {
             let token = TokenClient::new(&env, &escrow.usdc_address);
             token.transfer(&env.current_contract_address(), &escrow.exporter, &remaining);
@@ -336,7 +336,7 @@ impl Contract {
         }
 
         // Compute the remaining balance still held by the contract.
-        let remaining = escrow.total_amount - escrow.released_amount;
+        let remaining = escrow.total_amount - escrow.withdrawn_amount;
 
         // Split: rescue_amount -> farmer, exporter_refund -> exporter.
         let rescue_amount = (remaining * rescue_bps as i128) / 10_000;
@@ -352,6 +352,56 @@ impl Contract {
 
         // Remove the escrow so the crop_id can be reused (e.g. re-init).
         env.storage().persistent().remove(&DataKey::Escrow(crop_id));
+
+        Ok(())
+    }
+
+    // Withdraw USDC from the contract to the farmer's wallet. Admin/oracle
+    // only (the farmer authenticates off-chain via the backend). The amount
+    // must not exceed `released_amount - withdrawn_amount` (the balance
+    // enabled but not yet withdrawn). Works on Active and Completed escrows;
+    // a Frozen escrow still allows withdrawing already-enabled funds.
+    pub fn withdraw(
+        env: Env,
+        crop_id: u64,
+        amount: i128,
+    ) -> Result<(), ContractError> {
+        require_admin(&env)?;
+
+        let mut escrow: EscrowData = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Escrow(crop_id))
+            .ok_or(ContractError::EscrowNotFound)?;
+
+        if amount <= 0 {
+            return Err(ContractError::InvalidAmount);
+        }
+
+        // The farmer can only withdraw what has been enabled but not yet taken.
+        let available = escrow
+            .released_amount
+            .checked_sub(escrow.withdrawn_amount)
+            .ok_or(ContractError::InvalidAmount)?;
+        if amount > available {
+            return Err(ContractError::InvalidAmount);
+        }
+
+        // Transfer USDC from the contract custody to the farmer.
+        let token = TokenClient::new(&env, &escrow.usdc_address);
+        token.transfer(&env.current_contract_address(), &escrow.farmer, &amount);
+
+        escrow.withdrawn_amount = escrow
+            .withdrawn_amount
+            .checked_add(amount)
+            .ok_or(ContractError::InvalidAmount)?;
+
+        env.storage()
+            .persistent()
+            .set(&DataKey::Escrow(crop_id), &escrow);
+        env.storage()
+            .persistent()
+            .extend_ttl(&DataKey::Escrow(crop_id), TTL_THRESHOLD, TTL_EXTEND_TO);
 
         Ok(())
     }

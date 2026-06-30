@@ -10,17 +10,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { formatUSDC, formatDate } from "@/lib/format";
+import { formatUSDC, formatDate, getStellarExplorerUrl } from "@/lib/format";
 import Image from "next/image";
-import { useWithdrawals } from "../hooks/use-withdrawals";
+import { ArrowUpRight } from "@phosphor-icons/react";
+import type { WithdrawalEntry } from "@/features/dashboard/types";
 
 interface WithdrawalHistoryProps {
-  contractId: string;
+  withdrawals: WithdrawalEntry[];
 }
 
-export function WithdrawalHistory({ contractId }: WithdrawalHistoryProps) {
+export function WithdrawalHistory({ withdrawals }: WithdrawalHistoryProps) {
   const t = useTranslations("withdrawal");
-  const { withdrawals } = useWithdrawals(contractId);
 
   if (withdrawals.length === 0) {
     return (
@@ -43,6 +43,7 @@ export function WithdrawalHistory({ contractId }: WithdrawalHistoryProps) {
             <TableHead className="text-right">{t("history.amount")}</TableHead>
             <TableHead>{t("history.bank")}</TableHead>
             <TableHead>{t("history.account")}</TableHead>
+            <TableHead>{t("history.txHash")}</TableHead>
             <TableHead>{t("history.status")}</TableHead>
           </TableRow>
         </TableHeader>
@@ -55,11 +56,29 @@ export function WithdrawalHistory({ contractId }: WithdrawalHistoryProps) {
               <TableCell className="text-right tabular-nums font-medium">
                 {formatUSDC(w.amount)}
               </TableCell>
-              <TableCell>{w.bankName}</TableCell>
-              <TableCell className="font-mono text-sm">****{w.accountLast4}</TableCell>
+              <TableCell>{w.bank_name ?? "—"}</TableCell>
+              <TableCell className="font-mono text-sm">
+                {w.account_last4 ? `****${w.account_last4}` : "—"}
+              </TableCell>
               <TableCell>
-                <Badge variant="success" className="text-xs">
-                  {t("history.completed")}
+                <a
+                  href={getStellarExplorerUrl(w.tx_hash)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+                >
+                  {w.tx_hash.slice(0, 8)}...
+                  <ArrowUpRight weight="bold" className="h-3 w-3" />
+                </a>
+              </TableCell>
+              <TableCell>
+                <Badge
+                  variant={w.status === "completed" ? "success" : "danger"}
+                  className="text-xs"
+                >
+                  {w.status === "completed"
+                    ? t("history.completed")
+                    : t("history.failed")}
                 </Badge>
               </TableCell>
             </TableRow>

@@ -1,9 +1,20 @@
-const { rpc: { Server }, xdr, Address } = require("@stellar/stellar-sdk");
+const { rpc: { Server }, xdr } = require("@stellar/stellar-sdk");
 
 async function main() {
-  const server = new Server("https://soroban-testnet.stellar.org");
-  const cid = "CARYMQLSHVWJUMRRNNLWXM7GZPTA6QBI6OMPJTKR76ZMONYN2GY5MIR2";
-  const usdc = "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA";
+  const cid = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID;
+  const usdc = process.env.NEXT_STELLAR_USDC_CONTRACT_ID;
+  const rpcUrl = process.env.NEXT_PUBLIC_STELLAR_RPC_URL || "https://soroban-testnet.stellar.org";
+
+  if (!cid) {
+    console.error("Falta NEXT_PUBLIC_STELLAR_CONTRACT_ID en .env");
+    process.exit(1);
+  }
+  if (!usdc) {
+    console.error("Falta NEXT_STELLAR_USDC_CONTRACT_ID en .env");
+    process.exit(1);
+  }
+
+  const server = new Server(rpcUrl);
 
   const latest = await server.getLatestLedger();
   const startLedger = Math.max(1, latest.sequence - 5000);

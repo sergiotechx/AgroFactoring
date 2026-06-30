@@ -6,25 +6,58 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { formatUSDC } from "@/lib/format";
-import { useWithdrawals } from "../hooks/use-withdrawals";
+import { useWithdraw } from "../hooks/use-withdrawals";
 import { WithdrawalModal } from "./withdrawal-modal";
-import type { LedgerEntry } from "@/features/dashboard/types";
+import type { WithdrawalResponse } from "../types";
+import type { LedgerEntry, WithdrawalEntry } from "@/features/dashboard/types";
 import { Wallet, ArrowLineDown, Warning } from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 interface BalanceCardProps {
   contractId: string;
   ledger: LedgerEntry[];
+  withdrawals: WithdrawalEntry[];
   isFrozen: boolean;
 }
 
-export function BalanceCard({ contractId, ledger, isFrozen }: BalanceCardProps) {
+export function BalanceCard({
+  contractId,
+  ledger,
+  withdrawals,
+  isFrozen,
+}: BalanceCardProps) {
   const t = useTranslations("withdrawal");
   const [showModal, setShowModal] = useState(false);
 
   const totalReleased = ledger.reduce((sum, e) => sum + e.amount_released, 0);
-  const { withdrawals, totalWithdrawn, withdraw } = useWithdrawals(contractId);
+  const totalWithdrawn = withdrawals
+    .filter((w) => w.status === "completed")
+    .reduce((sum, w) => sum + w.amount, 0);
   const availableBalance = Math.max(0, totalReleased - totalWithdrawn);
   const withdrawnPercent = totalReleased > 0 ? (totalWithdrawn / totalReleased) * 100 : 0;
+
+  const withdrawMutation = useWithdraw();
+
+  const handleWithdraw = async (
+    amount: number,
+    bankName: string,
+    accountLast4: string
+  ): Promise<WithdrawalResponse> => {
+    return withdrawMutation.mutateAsync({
+      contract_id: contractId,
+      amount,
+      bank_name: bankName,
+      account_last4: accountLast4,
+    });
+  };
+
+  const handleOpenModal = () => {
+    if (availableBalance <= 0) {
+      toast.error(t("errors.noFunds"));
+      return;
+    }
+    setShowModal(true);
+  };
 
   return (
     <>
@@ -70,7 +103,7 @@ export function BalanceCard({ contractId, ledger, isFrozen }: BalanceCardProps) 
           {/* Withdraw button */}
           <Button
             className="w-full gap-2"
-            onClick={() => setShowModal(true)}
+            onClick={handleOpenModal}
             disabled={availableBalance <= 0 || isFrozen}
           >
             <ArrowLineDown weight="duotone" className="h-4 w-4" />
@@ -83,7 +116,7 @@ export function BalanceCard({ contractId, ledger, isFrozen }: BalanceCardProps) 
         open={showModal}
         onClose={() => setShowModal(false)}
         availableBalance={availableBalance}
-        onWithdraw={withdraw}
+        onWithdraw={handleWithdraw}
       />
     </>
   );

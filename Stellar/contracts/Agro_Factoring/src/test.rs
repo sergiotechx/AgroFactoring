@@ -171,6 +171,7 @@ fn test_init_success() {
     assert_eq!(state.status, EscrowStatus::Active);
     assert_eq!(state.current_phase, 0);
     assert_eq!(state.released_amount, 0);
+    assert_eq!(state.withdrawn_amount, 0);
     assert_eq!(state.total_amount, 5000);
     assert_eq!(state.amount_per_phase, 1000);
 }
@@ -268,16 +269,18 @@ fn test_init_unauthorized() {
 fn test_release_phase_success() {
     let t = setup(5000, 1000, 1);
 
-    // Release phase 1 -> farmer receives 1000, contract drops by 1000.
+    // Release phase 1 -> enables 1000 for withdrawal, funds stay in contract.
     t.escrow().release_phase(&1, &1);
 
     let state = t.escrow().get_escrow_state(&t.exporter, &t.farmer, &1);
     assert_eq!(state.current_phase, 1);
     assert_eq!(state.released_amount, 1000);
+    assert_eq!(state.withdrawn_amount, 0);
     assert_eq!(state.status, EscrowStatus::Active);
 
-    assert_eq!(t.token().balance(&t.farmer), 1000);
-    assert_eq!(t.token().balance(&t.contract_addr), 4000);
+    // Funds remain in the contract until the farmer withdraws.
+    assert_eq!(t.token().balance(&t.farmer), 0);
+    assert_eq!(t.token().balance(&t.contract_addr), 5000);
 }
 
 #[test]
@@ -291,11 +294,12 @@ fn test_release_all_phases_completes() {
     let state = t.escrow().get_escrow_state(&t.exporter, &t.farmer, &1);
     assert_eq!(state.current_phase, 5);
     assert_eq!(state.released_amount, 5000);
+    assert_eq!(state.withdrawn_amount, 0);
     assert_eq!(state.status, EscrowStatus::Completed);
 
-    // Farmer received everything, contract holds nothing.
-    assert_eq!(t.token().balance(&t.farmer), 5000);
-    assert_eq!(t.token().balance(&t.contract_addr), 0);
+    // All funds enabled but none withdrawn; contract still holds everything.
+    assert_eq!(t.token().balance(&t.farmer), 0);
+    assert_eq!(t.token().balance(&t.contract_addr), 5000);
 }
 
 #[test]
@@ -437,20 +441,20 @@ fn test_reset_escrow_full_refund() {
 fn test_reset_escrow_partial_refund() {
     let t = setup(5000, 1000, 1);
 
-    // Release 2 phases (2000 to farmer), then reset.
+    // Release 2 phases (enables 2000), then reset. Funds never left the contract.
     t.escrow().release_phase(&1, &1);
     t.escrow().release_phase(&1, &2);
 
-    assert_eq!(t.token().balance(&t.farmer), 2000);
-    assert_eq!(t.token().balance(&t.contract_addr), 3000);
+    assert_eq!(t.token().balance(&t.farmer), 0);
+    assert_eq!(t.token().balance(&t.contract_addr), 5000);
 
     t.escrow().reset_escrow(&1);
 
-    // Remaining 3000 returned to exporter.
-    assert_eq!(t.token().balance(&t.exporter), 3000);
+    // Nothing was withdrawn, so full 5000 returns to exporter.
+    assert_eq!(t.token().balance(&t.exporter), 5000);
     assert_eq!(t.token().balance(&t.contract_addr), 0);
-    // Farmer keeps what was already released.
-    assert_eq!(t.token().balance(&t.farmer), 2000);
+    // Farmer keeps nothing (no withdrawals were made).
+    assert_eq!(t.token().balance(&t.farmer), 0);
 }
 
 #[test]
@@ -532,18 +536,19 @@ fn test_resolve_disaster_success() {
 fn test_resolve_disaster_partial_release() {
     let t = setup(5000, 1000, 1);
 
-    // Release 2 phases (2000 to farmer), then freeze.
+    // Release 2 phases (enables 2000, funds stay in contract), then freeze.
     t.escrow().release_phase(&1, &1);
     t.escrow().release_phase(&1, &2);
     t.escrow().trigger_disaster(&t.exporter, &t.farmer, &1);
 
-    // Remaining in contract: 3000. 30% rescue = 900, 70% refund = 2100.
+    // Nothing withdrawn, contract still holds full 5000.
+    // 30% rescue = 1500, 70% refund = 3500.
     t.escrow().resolve_disaster(&1, &3000);
 
-    // Farmer keeps the 2000 already released + 900 rescue = 2900.
-    assert_eq!(t.token().balance(&t.farmer), 2900);
-    // Exporter gets 70% of remaining 3000 = 2100.
-    assert_eq!(t.token().balance(&t.exporter), 2100);
+    // Farmer gets 30% rescue of the full 5000 (nothing was withdrawn).
+    assert_eq!(t.token().balance(&t.farmer), 1500);
+    // Exporter gets 70% refund of the full 5000.
+    assert_eq!(t.token().balance(&t.exporter), 3500);
     assert_eq!(t.token().balance(&t.contract_addr), 0);
 }
 
@@ -605,6 +610,180 @@ fn test_resolve_disaster_invalid_bps() {
 }
 
 // ==================================================================
+// withdraw tests
+// ==================================================================
+
+#[test]
+fn test_withdraw_success() {
+    let t = setup(5000, 1000, 1);
+
+    // Release phase 1 -> enables 1000 for withdrawal.
+    t.escrow().release_phase(&1, &1);
+
+    // Farmer withdraws 600.
+    t.escrow().withdraw(&1, &600);
+
+    let state = t.escrow().get_escrow_state(&t.exporter, &t.farmer, &1);
+    assert_eq!(state.released_amount, 1000);
+    assert_eq!(state.withdrawn_amount, 600);
+
+    // Farmer received 600, contract dropped by 600.
+    assert_eq!(t.token().balance(&t.farmer), 600);
+    assert_eq!(t.token().balance(&t.contract_addr), 4400);
+}
+
+#[test]
+fn test_withdraw_full_enabled() {
+    let t = setup(5000, 1000, 1);
+
+    // Release all 5 phases -> 5000 enabled.
+    for phase in 1..=5u32 {
+        t.escrow().release_phase(&1, &phase);
+    }
+
+    // Withdraw everything that was enabled.
+    t.escrow().withdraw(&1, &5000);
+
+    let state = t.escrow().get_escrow_state(&t.exporter, &t.farmer, &1);
+    assert_eq!(state.status, EscrowStatus::Completed);
+    assert_eq!(state.withdrawn_amount, 5000);
+
+    assert_eq!(t.token().balance(&t.farmer), 5000);
+    assert_eq!(t.token().balance(&t.contract_addr), 0);
+}
+
+#[test]
+fn test_withdraw_partial_then_rest() {
+    let t = setup(5000, 1000, 1);
+
+    t.escrow().release_phase(&1, &1);
+    t.escrow().withdraw(&1, &400);
+
+    // Remaining enabled = 600.
+    t.escrow().withdraw(&1, &600);
+
+    let state = t.escrow().get_escrow_state(&t.exporter, &t.farmer, &1);
+    assert_eq!(state.withdrawn_amount, 1000);
+
+    assert_eq!(t.token().balance(&t.farmer), 1000);
+    assert_eq!(t.token().balance(&t.contract_addr), 4000);
+}
+
+#[test]
+fn test_withdraw_exceeds_enabled() {
+    let t = setup(5000, 1000, 1);
+
+    // Release 1 phase -> 1000 enabled.
+    t.escrow().release_phase(&1, &1);
+
+    // Try to withdraw more than enabled.
+    let res = t.escrow().try_withdraw(&1, &1001);
+    assert_eq!(res, Err(Ok(ContractError::InvalidAmount)));
+}
+
+#[test]
+fn test_withdraw_without_release() {
+    let t = setup(5000, 1000, 1);
+
+    // Nothing released yet -> nothing to withdraw.
+    let res = t.escrow().try_withdraw(&1, &1);
+    assert_eq!(res, Err(Ok(ContractError::InvalidAmount)));
+}
+
+#[test]
+fn test_withdraw_zero_or_negative() {
+    let t = setup(5000, 1000, 1);
+
+    t.escrow().release_phase(&1, &1);
+
+    let res = t.escrow().try_withdraw(&1, &0);
+    assert_eq!(res, Err(Ok(ContractError::InvalidAmount)));
+
+    let res = t.escrow().try_withdraw(&1, &(-1));
+    assert_eq!(res, Err(Ok(ContractError::InvalidAmount)));
+}
+
+#[test]
+fn test_withdraw_not_found() {
+    let t = setup(5000, 1000, 1);
+
+    let res = t.escrow().try_withdraw(&999, &100);
+    assert_eq!(res, Err(Ok(ContractError::EscrowNotFound)));
+}
+
+#[test]
+fn test_withdraw_unauthorized() {
+    let t = setup(5000, 1000, 1);
+
+    t.escrow().release_phase(&1, &1);
+
+    // Disable auth mocking so admin.require_auth() fails.
+    t.env.set_auths(&[]);
+
+    let res = t.escrow().try_withdraw(&1, &100);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_withdraw_after_freeze() {
+    let t = setup(5000, 1000, 1);
+
+    // Release 1 phase, then freeze.
+    t.escrow().release_phase(&1, &1);
+    t.escrow().trigger_disaster(&t.exporter, &t.farmer, &1);
+
+    // The farmer can still withdraw what was already enabled before the freeze.
+    t.escrow().withdraw(&1, &1000);
+
+    let state = t.escrow().get_escrow_state(&t.exporter, &t.farmer, &1);
+    assert_eq!(state.status, EscrowStatus::Frozen);
+    assert_eq!(state.withdrawn_amount, 1000);
+
+    assert_eq!(t.token().balance(&t.farmer), 1000);
+    assert_eq!(t.token().balance(&t.contract_addr), 4000);
+}
+
+#[test]
+fn test_withdraw_after_partial_withdraw_then_resolve() {
+    let t = setup(5000, 1000, 1);
+
+    // Release 2 phases (2000 enabled), withdraw 500.
+    t.escrow().release_phase(&1, &1);
+    t.escrow().release_phase(&1, &2);
+    t.escrow().withdraw(&1, &500);
+
+    assert_eq!(t.token().balance(&t.contract_addr), 4500);
+
+    // Freeze and resolve: remaining in contract = 5000 - 500 = 4500.
+    t.escrow().trigger_disaster(&t.exporter, &t.farmer, &1);
+    t.escrow().resolve_disaster(&1, &3000);
+
+    // Farmer: 500 (withdrawn) + 30% of 4500 (1350 rescue) = 1850.
+    assert_eq!(t.token().balance(&t.farmer), 1850);
+    // Exporter: 70% of 4500 = 3150.
+    assert_eq!(t.token().balance(&t.exporter), 3150);
+    assert_eq!(t.token().balance(&t.contract_addr), 0);
+}
+
+#[test]
+fn test_withdraw_after_partial_withdraw_then_reset() {
+    let t = setup(5000, 1000, 1);
+
+    // Release 1 phase (1000 enabled), withdraw 300.
+    t.escrow().release_phase(&1, &1);
+    t.escrow().withdraw(&1, &300);
+
+    assert_eq!(t.token().balance(&t.contract_addr), 4700);
+
+    // Reset: remaining = 5000 - 300 = 4700 returns to exporter.
+    t.escrow().reset_escrow(&1);
+
+    assert_eq!(t.token().balance(&t.exporter), 4700);
+    assert_eq!(t.token().balance(&t.farmer), 300);
+    assert_eq!(t.token().balance(&t.contract_addr), 0);
+}
+
+// ==================================================================
 // get_escrow_state tests
 // ==================================================================
 
@@ -621,6 +800,7 @@ fn test_get_escrow_state_success() {
     assert_eq!(state.amount_per_phase, 1000);
     assert_eq!(state.current_phase, 0);
     assert_eq!(state.released_amount, 0);
+    assert_eq!(state.withdrawn_amount, 0);
     assert_eq!(state.status, EscrowStatus::Active);
 }
 

@@ -63,10 +63,17 @@ export async function GET(request: NextRequest) {
       .eq("contract_id", contractId)
       .order("phase_number", { ascending: true });
 
-    const [cropResult, phasesResult, ledgerResult] = await Promise.all([
+    const withdrawalsPromise = supabase
+      .from("withdrawals")
+      .select("id, amount, bank_name, account_last4, tx_hash, status, timestamp")
+      .eq("contract_id", contractId)
+      .order("timestamp", { ascending: false });
+
+    const [cropResult, phasesResult, ledgerResult, withdrawalsResult] = await Promise.all([
       cropPromise,
       phasesPromise,
       ledgerPromise,
+      withdrawalsPromise,
     ]);
 
     const crop = cropResult.data;
@@ -112,6 +119,7 @@ export async function GET(request: NextRequest) {
         exporter,
         phases: phasesResult.data ?? [],
         ledger: ledgerResult.data ?? [],
+        withdrawals: withdrawalsResult.data ?? [],
       },
       { status: 200 }
     );

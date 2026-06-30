@@ -62,6 +62,16 @@ export interface LedgerEntry {
   timestamp: string;
 }
 
+export interface WithdrawalEntry {
+  id: string;
+  amount: number;
+  bank_name: string | null;
+  account_last4: string | null;
+  tx_hash: string;
+  status: "completed" | "failed";
+  timestamp: string;
+}
+
 // --- API response types ---
 
 export interface DashboardState {
@@ -73,6 +83,7 @@ export interface DashboardState {
   exporter: Profile | null;
   phases: Phase[];
   ledger: LedgerEntry[];
+  withdrawals: WithdrawalEntry[];
 }
 
 export interface ContractListResponse {

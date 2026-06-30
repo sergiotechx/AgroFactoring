@@ -15,9 +15,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { formatUSDC } from "@/lib/format";
-import { SpinnerGap, Check, ArrowLineDown } from "@phosphor-icons/react";
+import { formatUSDC, getStellarExplorerUrl } from "@/lib/format";
+import { SpinnerGap, Check, ArrowLineDown, ArrowUpRight, Warning } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "motion/react";
+import { ApiError } from "@/lib/api-client";
+import type { WithdrawalResponse } from "../types";
 
 const BANK_OPTIONS = [
   "Bancolombia",
@@ -32,7 +34,11 @@ interface WithdrawalModalProps {
   open: boolean;
   onClose: () => void;
   availableBalance: number;
-  onWithdraw: (amount: number, bankName: string, accountLast4: string) => void;
+  onWithdraw: (
+    amount: number,
+    bankName: string,
+    accountLast4: string
+  ) => Promise<WithdrawalResponse>;
 }
 
 export function WithdrawalModal({
@@ -42,12 +48,14 @@ export function WithdrawalModal({
   onWithdraw,
 }: WithdrawalModalProps) {
   const t = useTranslations("withdrawal");
-  const [step, setStep] = useState<"form" | "processing" | "success">("form");
+  const [step, setStep] = useState<"form" | "processing" | "success" | "error">("form");
   const [successData, setSuccessData] = useState<{
     amount: string;
     bank: string;
     last4: string;
+    txHash: string;
   } | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string>("");
 
   const schema = z.object({
     amount: z.coerce
@@ -75,25 +83,32 @@ export function WithdrawalModal({
   const handleClose = () => {
     setStep("form");
     setSuccessData(null);
+    setErrorMsg("");
     resetForm();
     onClose();
   };
 
   const onSubmit = async (data: FormData) => {
     setStep("processing");
+    setErrorMsg("");
 
-    // Artificial delay for UX
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const result = await onWithdraw(data.amount, data.bankName, data.accountLast4);
 
-    onWithdraw(data.amount, data.bankName, data.accountLast4);
-
-    setSuccessData({
-      amount: formatUSDC(data.amount),
-      bank: data.bankName,
-      last4: data.accountLast4,
-    });
-    setStep("success");
-    resetForm();
+      setSuccessData({
+        amount: formatUSDC(data.amount),
+        bank: data.bankName,
+        last4: data.accountLast4,
+        txHash: result.tx_hash,
+      });
+      setStep("success");
+      resetForm();
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : t("errors.txFailed");
+      setErrorMsg(message);
+      setStep("error");
+    }
   };
 
   return (
@@ -117,10 +132,10 @@ export function WithdrawalModal({
               onSubmit={handleSubmit(onSubmit)}
               className="space-y-4 pt-2"
             >
-              {/* Simulation disclaimer */}
+              {/* USDC transfer notice */}
               <div className="flex justify-center">
-                <Badge variant="warning" className="text-xs">
-                  {t("modal.disclaimer")}
+                <Badge variant="success" className="text-xs">
+                  {t("modal.transferNotice")}
                 </Badge>
               </div>
 
@@ -201,6 +216,9 @@ export function WithdrawalModal({
               <p className="text-sm font-medium text-text-secondary">
                 {t("modal.processing")}
               </p>
+              <p className="text-xs text-text-muted text-center max-w-xs">
+                {t("modal.processingDesc")}
+              </p>
             </motion.div>
           )}
 
@@ -229,8 +247,46 @@ export function WithdrawalModal({
                   })}
                 </p>
               </div>
+              <a
+                href={getStellarExplorerUrl(successData.txHash)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+              >
+                {t("modal.viewOnExplorer")}
+                <ArrowUpRight weight="bold" className="h-3 w-3" />
+              </a>
               <Button onClick={handleClose} className="mt-2">
                 OK
+              </Button>
+            </motion.div>
+          )}
+
+          {step === "error" && (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center gap-4 py-8"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                className="flex h-14 w-14 items-center justify-center rounded-full bg-danger"
+              >
+                <Warning weight="bold" className="h-7 w-7 text-white" />
+              </motion.div>
+              <div className="text-center">
+                <p className="text-lg font-semibold">{t("modal.error")}</p>
+                <p className="mt-1 text-sm text-text-muted max-w-xs">{errorMsg}</p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setStep("form")}
+                className="mt-2"
+              >
+                {t("modal.retry")}
               </Button>
             </motion.div>
           )}

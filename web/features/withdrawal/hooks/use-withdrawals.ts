@@ -1,54 +1,25 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import type { Withdrawal } from "../types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiPost } from "@/lib/api-client";
+import type { WithdrawalResponse } from "../types";
 
-function getStorageKey(contractId: string) {
-  return `af_withdrawals_${contractId}`;
+interface WithdrawParams {
+  contract_id: string;
+  amount: number;
+  bank_name: string;
+  account_last4: string;
 }
 
-function readWithdrawals(contractId: string): Withdrawal[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(getStorageKey(contractId));
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
+export function useWithdraw() {
+  const queryClient = useQueryClient();
 
-function writeWithdrawals(contractId: string, withdrawals: Withdrawal[]) {
-  localStorage.setItem(getStorageKey(contractId), JSON.stringify(withdrawals));
-}
-
-export function useWithdrawals(contractId: string) {
-  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
-
-  useEffect(() => {
-    setWithdrawals(readWithdrawals(contractId));
-  }, [contractId]);
-
-  const totalWithdrawn = withdrawals.reduce((sum, w) => sum + w.amount, 0);
-
-  const withdraw = useCallback(
-    (amount: number, bankName: string, accountLast4: string) => {
-      const entry: Withdrawal = {
-        id: crypto.randomUUID(),
-        amount,
-        bankName,
-        accountLast4,
-        timestamp: new Date().toISOString(),
-        status: "completed",
-      };
-
-      const updated = [entry, ...readWithdrawals(contractId)];
-      writeWithdrawals(contractId, updated);
-      setWithdrawals(updated);
-
-      return entry;
+  return useMutation({
+    mutationFn: (params: WithdrawParams) =>
+      apiPost<WithdrawalResponse>("/api/contract/withdraw", params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
     },
-    [contractId]
-  );
-
-  return { withdrawals, totalWithdrawn, withdraw };
+  });
 }

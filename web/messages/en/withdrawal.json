@@ -10,7 +10,7 @@
   },
   "modal": {
     "title": "Withdraw Funds",
-    "disclaimer": "Simulation — No real transfer will be made",
+    "transferNotice": "On-chain USDC transfer to your wallet",
     "amount": "Amount to withdraw",
     "amountPlaceholder": "0.00",
     "amountMax": "Maximum: {max}",
@@ -19,9 +19,13 @@
     "accountLast4": "Last 4 digits of account",
     "accountLast4Placeholder": "1234",
     "confirm": "Confirm Withdrawal",
-    "processing": "Processing...",
-    "success": "Funds Transferred",
-    "successDesc": "{amount} sent to {bank} ****{last4}"
+    "processing": "Processing transfer...",
+    "processingDesc": "Sending USDC from the contract to your Stellar wallet",
+    "success": "Withdrawal Successful",
+    "successDesc": "{amount} USDC transferred to your wallet ({bank} ****{last4})",
+    "viewOnExplorer": "View transaction on Stellar Explorer",
+    "error": "Withdrawal Failed",
+    "retry": "Retry"
   },
   "history": {
     "title": "Withdrawal History",
@@ -30,8 +34,14 @@
     "amount": "Amount",
     "bank": "Bank",
     "account": "Account",
+    "txHash": "Tx Hash",
     "status": "Status",
-    "completed": "Completed"
+    "completed": "Completed",
+    "failed": "Failed"
+  },
+  "errors": {
+    "noFunds": "No funds available for withdrawal",
+    "txFailed": "The on-chain transaction failed"
   },
   "validation": {
     "amountRequired": "Amount is required",

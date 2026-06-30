@@ -1,6 +1,6 @@
 // Constants that don't require the Stellar SDK
 export const STELLAR_NETWORK = "TESTNET" as const;
-export const SOROBAN_RPC_URL = "https://soroban-testnet.stellar.org";
+export const SOROBAN_RPC_URL = process.env.NEXT_PUBLIC_STELLAR_RPC_URL ?? "https://soroban-testnet.stellar.org";
 export const NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
 
 const CONTRACT_ID = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID;
