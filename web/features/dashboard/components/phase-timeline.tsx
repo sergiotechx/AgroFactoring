@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { formatUSDC } from "@/lib/format";
-import type { Phase, LedgerEntry, ContractStatus } from "@/features/dashboard/types";
+import { isContractLocked, type Phase, type LedgerEntry, type ContractStatus } from "@/features/dashboard/types";
 import { Check, Snowflake } from "@phosphor-icons/react";
 import { motion } from "motion/react";
 
@@ -27,7 +27,7 @@ function getPhaseState(
 ): PhaseState {
   const hasRelease = ledger.some((e) => e.phase_number === phaseNumber);
   if (hasRelease) return "completed";
-  if (contractStatus === "frozen") return "frozen";
+  if (isContractLocked(contractStatus)) return "frozen";
   if (phaseNumber === currentPhase) return "current";
   return "pending";
 }

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { formatUSDC } from "@/lib/format";
+import { DEMO_CONTRACT_PLACEHOLDER } from "@/features/dashboard/types";
 import type { DashboardState } from "@/features/dashboard/types";
 import {
   CurrencyDollar,
@@ -22,8 +23,10 @@ interface ContractOverviewProps {
 }
 
 const statusVariant = {
+  notInitialized: "warning",
   active: "success",
   frozen: "danger",
+  resolved: "danger",
   completed: "default",
 } as const;
 
@@ -39,6 +42,10 @@ export function ContractOverview({ data, role }: ContractOverviewProps) {
   );
 
   const counterpart = role === "exporter" ? farmer : exporter;
+  const needsInit =
+    contract.stellar_contract_id === null ||
+    contract.stellar_contract_id === DEMO_CONTRACT_PLACEHOLDER;
+  const displayStatus = needsInit ? "notInitialized" : contract.status;
 
   const cards = [
     // Total in Custody / Funds Received
@@ -89,8 +96,8 @@ export function ContractOverview({ data, role }: ContractOverviewProps) {
         <ShieldCheck className="h-4 w-4 text-text-muted" weight="duotone" />
       </CardHeader>
       <CardContent>
-        <Badge variant={statusVariant[contract.status]}>
-          {tStatus(contract.status)}
+        <Badge variant={statusVariant[displayStatus]}>
+          {tStatus(displayStatus)}
         </Badge>
       </CardContent>
     </Card>,
@@ -163,6 +170,7 @@ export function ContractOverview({ data, role }: ContractOverviewProps) {
       {cards.map((card, i) => (
         <motion.div
           key={card.key}
+          className="h-full [&>*]:h-full"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: i * 0.06 }}

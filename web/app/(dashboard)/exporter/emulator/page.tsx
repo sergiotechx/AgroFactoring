@@ -11,8 +11,10 @@ import { EmulatorControls } from "@/features/dashboard/components/emulator-contr
 import { WeatherPanel } from "@/features/dashboard/components/weather-panel";
 import { IoTPanel } from "@/features/dashboard/components/iot-panel";
 import { DisasterTrigger } from "@/features/dashboard/components/disaster-trigger";
+import { ResolveDisaster } from "@/features/dashboard/components/resolve-disaster";
 import { FrozenBanner } from "@/features/dashboard/components/frozen-banner";
 import { DashboardSkeleton } from "@/features/dashboard/components/skeletons/dashboard-skeleton";
+import { DEMO_CONTRACT_PLACEHOLDER, isContractLocked } from "@/features/dashboard/types";
 import { apiPost } from "@/lib/api-client";
 import Image from "next/image";
 import { Warning, ArrowsClockwise, ArrowCounterClockwise, SpinnerGap } from "@phosphor-icons/react";
@@ -150,8 +152,17 @@ export default function ExporterEmulatorPage() {
     );
   }
 
-  const { contract } = dashboardQuery.data;
-  const isFrozen = contract.status === "frozen";
+  const { contract, ledger } = dashboardQuery.data;
+  const isFrozen = isContractLocked(contract.status);
+  // The escrow must exist on-chain before the disaster trigger can be invoked.
+  // DB rows start in "active" status with stellar_contract_id = null, so we
+  // can't rely on status alone — checking the on-chain id gates the trigger.
+  const needsInit =
+    contract.stellar_contract_id === null ||
+    contract.stellar_contract_id === DEMO_CONTRACT_PLACEHOLDER;
+  const releasedAmount =
+    ledger?.reduce((sum, l) => sum + l.amount_released, 0) ?? 0;
+  const remaining = contract.total_amount - releasedAmount;
 
   return (
     <div className="space-y-8">
@@ -174,13 +185,20 @@ export default function ExporterEmulatorPage() {
         <IoTPanel contractId={contractId} disabled={isFrozen} emulatorActive={contract.emulator_active} />
       </div>
 
-      {/* Disaster Trigger & Reset */}
+      {/* Disaster Trigger / Resolve & Reset */}
       <div className="grid gap-4 sm:grid-cols-2">
-        {!isFrozen && contract.status === "active" && (
+        {!isFrozen && contract.status === "active" && !needsInit && (
           <DisasterTrigger contractId={contractId} />
+        )}
+        {/* Resolve only while strictly "frozen" — once resolved the contract
+            stays visually locked (isFrozen) but the resolve button disappears
+            so it can't be invoked twice. */}
+        {contract.status === "frozen" && (
+          <ResolveDisaster contractId={contractId} remaining={remaining} />
         )}
         <ResetButton contractId={contractId} />
       </div>
+
     </div>
   );
 }

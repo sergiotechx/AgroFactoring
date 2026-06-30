@@ -27,6 +27,7 @@
     "notInitialized": "Contrato sin inicializar",
     "active": "Contrato activo",
     "frozen": "Contrato congelado",
+    "resolved": "Contrato congelado",
     "completed": "Contrato completado"
   }
 }

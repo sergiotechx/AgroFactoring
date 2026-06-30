@@ -18,7 +18,7 @@ import {
   useInitContract,
   useReleasePhase,
 } from "@/features/dashboard/hooks/use-contract-actions";
-import { DEMO_CONTRACT_PLACEHOLDER } from "@/features/dashboard/types";
+import { DEMO_CONTRACT_PLACEHOLDER, isContractLocked } from "@/features/dashboard/types";
 import Image from "next/image";
 import { Warning, ArrowsClockwise, RocketLaunch, PaperPlaneTilt } from "@phosphor-icons/react";
 
@@ -98,13 +98,14 @@ export default function ExporterPage() {
 
   const data = dashboardQuery.data;
   const contract = data.contract;
-  const isFrozen = contract.status === "frozen";
+  const isFrozen = isContractLocked(contract.status);
   const needsInit =
     contract.stellar_contract_id === null ||
     contract.stellar_contract_id === DEMO_CONTRACT_PLACEHOLDER;
   const canRelease = !needsInit && contract.status === "active";
+  const nextPhaseNum = contract.current_phase + 1;
   const currentPhaseData = data.phases.find(
-    (p) => p.phase_number === contract.current_phase
+    (p) => p.phase_number === nextPhaseNum
   );
 
   const handleInitConfirm = () => {
@@ -159,7 +160,7 @@ export default function ExporterPage() {
                 <Button onClick={() => setShowReleaseModal(true)} className="gap-2">
                   <PaperPlaneTilt weight="duotone" className="h-4 w-4" />
                   {tPhases("actions.releasePhase", {
-                    number: contract.current_phase,
+                    number: nextPhaseNum,
                   })}
                 </Button>
               )}

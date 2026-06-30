@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { enforceAutoStop } from "@/lib/emulator";
+import { isContractLocked } from "@/features/dashboard/types";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
           { status: 404 }
         );
       }
-      if (contract.status === "frozen") {
+      if (isContractLocked(contract.status)) {
         return NextResponse.json(
           { success: false, error: "El contrato está congelado" },
           { status: 409 }

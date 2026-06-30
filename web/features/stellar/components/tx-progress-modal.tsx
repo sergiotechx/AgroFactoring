@@ -49,6 +49,9 @@ function getStepState(
     return "pending";
   }
 
+  // "confirmed" is the terminal success state — all steps are done.
+  if (currentStep === "confirmed") return "completed";
+
   const stepIdx = TX_STEPS_ORDER.indexOf(step);
   const currentIdx = TX_STEPS_ORDER.indexOf(currentStep);
 
@@ -80,10 +83,10 @@ export function TxProgressModal({
       >
         <DialogHeader>
           <DialogTitle className="text-center">
-            {status.step === "confirmed"
-              ? t("tx.confirmed")
-              : status.step === "error"
-                ? t("tx.error")
+            {status.step === "error"
+              ? t("tx.error")
+              : stepMessageKeys[status.step]
+                ? t(stepMessageKeys[status.step])
                 : status.message}
           </DialogTitle>
         </DialogHeader>

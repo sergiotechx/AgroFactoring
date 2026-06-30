@@ -61,6 +61,7 @@ pub enum ContractError {
     InvalidPhase = 7,       // phase number out of order or out of range
     UsdcNotConfigured = 8,  // set_usdc has not been called yet
     PartyMismatch = 9,      // provided exporter/farmer do not match the stored escrow
+    EscrowNotFrozen = 11,   // resolve_disaster requires a Frozen escrow (skip 10 — used by SAC token errors)
 }
 
 #[contract]
@@ -301,6 +302,55 @@ impl Contract {
         }
 
         // Remove the escrow so the crop_id can be reused.
+        env.storage().persistent().remove(&DataKey::Escrow(crop_id));
+
+        Ok(())
+    }
+
+    // Resolve a frozen escrow after a disaster: distribute the remaining USDC
+    // between the farmer (rescue fund) and the exporter (refund), then remove
+    // the escrow. Admin-only; the escrow must be Frozen. `rescue_bps` is the
+    // fraction of the remaining balance (in basis points) sent to the farmer.
+    // Example: rescue_bps = 3000 -> 30% rescue to farmer, 70% refund to exporter.
+    pub fn resolve_disaster(
+        env: Env,
+        crop_id: u64,
+        rescue_bps: u32,
+    ) -> Result<(), ContractError> {
+        require_admin(&env)?;
+
+        // Validate basis points range (0..=10_000).
+        if rescue_bps > 10_000 {
+            return Err(ContractError::InvalidAmount);
+        }
+
+        let escrow: EscrowData = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Escrow(crop_id))
+            .ok_or(ContractError::EscrowNotFound)?;
+
+        // Only frozen escrows can be resolved.
+        if escrow.status != EscrowStatus::Frozen {
+            return Err(ContractError::EscrowNotFrozen);
+        }
+
+        // Compute the remaining balance still held by the contract.
+        let remaining = escrow.total_amount - escrow.released_amount;
+
+        // Split: rescue_amount -> farmer, exporter_refund -> exporter.
+        let rescue_amount = (remaining * rescue_bps as i128) / 10_000;
+        let exporter_refund = remaining - rescue_amount;
+
+        let token = TokenClient::new(&env, &escrow.usdc_address);
+        if rescue_amount > 0 {
+            token.transfer(&env.current_contract_address(), &escrow.farmer, &rescue_amount);
+        }
+        if exporter_refund > 0 {
+            token.transfer(&env.current_contract_address(), &escrow.exporter, &exporter_refund);
+        }
+
+        // Remove the escrow so the crop_id can be reused (e.g. re-init).
         env.storage().persistent().remove(&DataKey::Escrow(crop_id));
 
         Ok(())

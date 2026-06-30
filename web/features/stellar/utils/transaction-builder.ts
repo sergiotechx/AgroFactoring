@@ -1,33 +1,5 @@
 import { getStellarSdk, getRpc, getContract, NETWORK_PASSPHRASE } from "../config";
-
-/** Map contract error codes to user-friendly messages */
-const CONTRACT_ERRORS: Record<string, string> = {
-  "#1": "Admin no inicializado",
-  "#2": "El escrow ya fue inicializado para este cultivo",
-  "#3": "No autorizado para esta acción",
-  "#4": "Escrow no encontrado",
-  "#5": "Monto inválido (cero, negativo o no divisible)",
-  "#6": "El escrow está congelado por desastre",
-  "#7": "Fase inválida o fuera de orden",
-  "#8": "USDC no configurado en el contrato",
-  "#9": "Las partes no coinciden con el escrow",
-};
-
-function parseSimulationError(raw: string, method: string): string {
-  const errorMatch = raw.match(/#(\d+)/);
-  if (errorMatch) {
-    const code = `#${errorMatch[1]}`;
-    const friendly = CONTRACT_ERRORS[code];
-    if (friendly) return friendly;
-    return `Error del contrato (${code}) al ejecutar "${method}"`;
-  }
-  // Fallback: trim the verbose diagnostic log
-  const firstLine = raw.split("\n")[0];
-  if (firstLine.length > 120) {
-    return firstLine.slice(0, 120) + "…";
-  }
-  return firstLine;
-}
+import { parseSimulationError } from "@/lib/contract-errors";
 
 /**
  * Build the "init" transaction for the escrow contract.

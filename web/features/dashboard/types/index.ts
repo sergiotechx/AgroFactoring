@@ -14,7 +14,20 @@ export interface Contract {
   created_at: string;
 }
 
-export type ContractStatus = "active" | "frozen" | "completed";
+export type ContractStatus = "active" | "frozen" | "resolved" | "completed";
+
+/**
+ * A contract is "locked" when it's frozen OR has been resolved after a
+ * disaster. In both states the UI shows the frozen banner, blocks phase
+ * releases, and hides the disaster trigger — the only difference is that a
+ * resolved contract no longer offers the "Resolve Disaster" button.
+ *
+ * Use this instead of `status === "frozen"` in any UI/API that should treat
+ * the post-resolve state as visually still frozen.
+ */
+export function isContractLocked(status: ContractStatus): boolean {
+  return status === "frozen" || status === "resolved";
+}
 
 export interface Crop {
   id: string;

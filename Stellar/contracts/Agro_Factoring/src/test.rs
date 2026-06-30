@@ -503,6 +503,108 @@ fn test_reset_escrow_unauthorized() {
 }
 
 // ==================================================================
+// resolve_disaster tests
+// ==================================================================
+
+#[test]
+fn test_resolve_disaster_success() {
+    let t = setup(5000, 1000, 1);
+
+    // Freeze the escrow with full funds still in the contract.
+    t.escrow().trigger_disaster(&t.exporter, &t.farmer, &1);
+
+    // Resolve: 30% rescue to farmer, 70% refund to exporter.
+    t.escrow().resolve_disaster(&1, &3000);
+
+    // Farmer gets 30% rescue: 5000 * 30% = 1500.
+    assert_eq!(t.token().balance(&t.farmer), 1500);
+    // Exporter gets 70% refund: 5000 * 70% = 3500.
+    assert_eq!(t.token().balance(&t.exporter), 3500);
+    // Contract is fully drained.
+    assert_eq!(t.token().balance(&t.contract_addr), 0);
+
+    // Escrow no longer exists.
+    let res = t.escrow().try_get_escrow_state(&t.exporter, &t.farmer, &1);
+    assert_eq!(res, Err(Ok(ContractError::EscrowNotFound)));
+}
+
+#[test]
+fn test_resolve_disaster_partial_release() {
+    let t = setup(5000, 1000, 1);
+
+    // Release 2 phases (2000 to farmer), then freeze.
+    t.escrow().release_phase(&1, &1);
+    t.escrow().release_phase(&1, &2);
+    t.escrow().trigger_disaster(&t.exporter, &t.farmer, &1);
+
+    // Remaining in contract: 3000. 30% rescue = 900, 70% refund = 2100.
+    t.escrow().resolve_disaster(&1, &3000);
+
+    // Farmer keeps the 2000 already released + 900 rescue = 2900.
+    assert_eq!(t.token().balance(&t.farmer), 2900);
+    // Exporter gets 70% of remaining 3000 = 2100.
+    assert_eq!(t.token().balance(&t.exporter), 2100);
+    assert_eq!(t.token().balance(&t.contract_addr), 0);
+}
+
+#[test]
+fn test_resolve_disaster_not_frozen() {
+    let t = setup(5000, 1000, 1);
+
+    // Active escrow cannot be resolved.
+    let res = t.escrow().try_resolve_disaster(&1, &3000);
+    assert_eq!(res, Err(Ok(ContractError::EscrowNotFrozen)));
+}
+
+#[test]
+fn test_resolve_disaster_not_found() {
+    let t = setup(5000, 1000, 1);
+
+    let res = t.escrow().try_resolve_disaster(&999, &3000);
+    assert_eq!(res, Err(Ok(ContractError::EscrowNotFound)));
+}
+
+#[test]
+fn test_resolve_disaster_unauthorized() {
+    let t = setup(5000, 1000, 1);
+
+    t.escrow().trigger_disaster(&t.exporter, &t.farmer, &1);
+
+    // Disable auth mocking so admin.require_auth() fails.
+    t.env.set_auths(&[]);
+
+    let res = t.escrow().try_resolve_disaster(&1, &3000);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_resolve_disaster_allows_reinit() {
+    let t = setup(5000, 1000, 1);
+
+    t.escrow().trigger_disaster(&t.exporter, &t.farmer, &1);
+    t.escrow().resolve_disaster(&1, &3000);
+
+    // After resolve, exporter has 3500 back; re-init with 3000 (3 phases).
+    let res = t.escrow().try_init(&t.exporter, &t.farmer, &1, &3000, &1000);
+    assert!(res.is_ok());
+
+    let state = t.escrow().get_escrow_state(&t.exporter, &t.farmer, &1);
+    assert_eq!(state.current_phase, 0);
+    assert_eq!(state.status, EscrowStatus::Active);
+}
+
+#[test]
+fn test_resolve_disaster_invalid_bps() {
+    let t = setup(5000, 1000, 1);
+
+    t.escrow().trigger_disaster(&t.exporter, &t.farmer, &1);
+
+    // bps > 10_000 is invalid.
+    let res = t.escrow().try_resolve_disaster(&1, &10_001);
+    assert_eq!(res, Err(Ok(ContractError::InvalidAmount)));
+}
+
+// ==================================================================
 // get_escrow_state tests
 // ==================================================================
 

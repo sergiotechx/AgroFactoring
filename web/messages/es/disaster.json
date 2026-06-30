@@ -19,6 +19,18 @@
     "bannerDescription": "Desastre climatico detectado — Los fondos pendientes han sido bloqueados por el oraculo.",
     "rescueFund": "Fondo de Rescate Parametrico activado"
   },
+  "resolve": {
+    "title": "Fondo de Rescate Parametrico",
+    "description": "Distribuye los fondos restantes: 30% rescate al agricultor, 70% reembolso al exportador.",
+    "buttonLabel": "Resolver Desastre",
+    "remaining": "Saldo restante",
+    "rescueAmount": "Rescate agricultor (30%)",
+    "exporterRefund": "Reembolso exportador (70%)",
+    "confirm": "Confirmar Resolucion",
+    "confirmCountdown": "Confirmar ({seconds})",
+    "cancel": "Cancelar",
+    "success": "Desastre resuelto — fondos distribuidos"
+  },
   "progress": {
     "signing": "Firmando transaccion del oraculo...",
     "sending": "Enviando trigger_disaster...",

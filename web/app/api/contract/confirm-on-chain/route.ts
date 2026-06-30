@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
     const { data: contract, error: contractError } = await supabase
       .from("contracts")
-      .select("id, crop_id")
+      .select("id, crop_id, exporter_id")
       .eq("id", contractId)
       .maybeSingle();
 
@@ -60,6 +60,17 @@ export async function POST(request: Request) {
           { success: false, error: "Error al confirmar la inicialización" },
           { status: 500 }
         );
+      }
+
+      // Save the exporter's Freighter wallet address to their profile so that
+      // server-side operations (trigger_disaster, etc.) use the same address
+      // that was stored on-chain during init.
+      const exporterAddress = body?.exporter_address;
+      if (exporterAddress && contract.exporter_id) {
+        await supabase
+          .from("profiles")
+          .update({ wallet_address: exporterAddress })
+          .eq("id", contract.exporter_id);
       }
 
       return NextResponse.json({ success: true }, { status: 200 });

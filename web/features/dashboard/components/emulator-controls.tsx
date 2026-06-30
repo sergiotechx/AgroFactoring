@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { apiPost } from "@/lib/api-client";
-import type { Contract } from "@/features/dashboard/types";
+import { isContractLocked, type Contract } from "@/features/dashboard/types";
 import { Play, Stop, Timer, SpinnerGap, Warning } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
@@ -19,7 +19,7 @@ export function EmulatorControls({ contract }: EmulatorControlsProps) {
   const t = useTranslations("emulator");
   const queryClient = useQueryClient();
 
-  const isFrozen = contract.status === "frozen";
+  const isFrozen = isContractLocked(contract.status);
   const isActive = contract.emulator_active;
 
   // Client-side countdown

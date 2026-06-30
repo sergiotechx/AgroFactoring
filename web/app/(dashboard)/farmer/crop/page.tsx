@@ -11,6 +11,7 @@ import { DashboardSkeleton } from "@/features/dashboard/components/skeletons/das
 import { FrozenBanner } from "@/features/dashboard/components/frozen-banner";
 import { PhaseAccordion, PhaseFinancialSummary } from "@/features/dashboard/components/phase-detail-breakdown";
 import { formatUSDC } from "@/lib/format";
+import { isContractLocked } from "@/features/dashboard/types";
 import { Plant, Scales, CurrencyDollar, Stack, Warning, ArrowsClockwise } from "@phosphor-icons/react";
 
 export default function FarmerCropPage() {
@@ -61,7 +62,7 @@ export default function FarmerCropPage() {
   }
 
   const { contract, crop, phases, ledger } = dashboardQuery.data;
-  const isFrozen = contract.status === "frozen";
+  const isFrozen = isContractLocked(contract.status);
   const totalPhases = phases.length || 5;
   const completedPhases = contract.current_phase - 1;
   const progressPercent = (completedPhases / totalPhases) * 100;

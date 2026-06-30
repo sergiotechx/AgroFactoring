@@ -9,3 +9,5 @@ Stellar/target/
 
 # Agro_Factoring: snapshots de tests
 Stellar/contracts/Agro_Factoring/test_snapshots/
+
+.env

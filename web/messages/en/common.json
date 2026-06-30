@@ -24,8 +24,10 @@
     "loading": "Loading..."
   },
   "status": {
+    "notInitialized": "Not initialized",
     "active": "Active",
     "frozen": "Frozen",
+    "resolved": "Frozen",
     "completed": "Completed"
   },
   "language": {

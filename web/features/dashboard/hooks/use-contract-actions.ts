@@ -87,6 +87,7 @@ export function useInitContract() {
           contract_id: contractId,
           tx_type: "init",
           tx_hash: txHash,
+          exporter_address: address,
         });
 
         // 6. Success

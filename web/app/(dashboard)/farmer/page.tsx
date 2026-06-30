@@ -12,6 +12,7 @@ import { DashboardSkeleton } from "@/features/dashboard/components/skeletons/das
 import { FrozenBanner } from "@/features/dashboard/components/frozen-banner";
 import { BalanceCard } from "@/features/withdrawal/components/balance-card";
 import { WithdrawalHistory } from "@/features/withdrawal/components/withdrawal-history";
+import { isContractLocked } from "@/features/dashboard/types";
 import Image from "next/image";
 import { Warning, ArrowsClockwise } from "@phosphor-icons/react";
 
@@ -83,7 +84,7 @@ export default function FarmerPage() {
   }
 
   const data = dashboardQuery.data;
-  const isFrozen = data.contract.status === "frozen";
+  const isFrozen = isContractLocked(data.contract.status);
 
   return (
     <div className="space-y-8">

@@ -9,6 +9,7 @@ import { PhaseLedger } from "@/features/dashboard/components/phase-ledger";
 import { DashboardSkeleton } from "@/features/dashboard/components/skeletons/dashboard-skeleton";
 import { FrozenBanner } from "@/features/dashboard/components/frozen-banner";
 import { formatUSDC, formatDate } from "@/lib/format";
+import { isContractLocked } from "@/features/dashboard/types";
 import { Warning, ArrowsClockwise, Database, Calendar, Hash } from "@phosphor-icons/react";
 
 export default function FarmerDataPage() {

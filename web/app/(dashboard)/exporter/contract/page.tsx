@@ -19,7 +19,7 @@ import {
   useInitContract,
   useReleasePhase,
 } from "@/features/dashboard/hooks/use-contract-actions";
-import { DEMO_CONTRACT_PLACEHOLDER } from "@/features/dashboard/types";
+import { DEMO_CONTRACT_PLACEHOLDER, isContractLocked } from "@/features/dashboard/types";
 import { formatUSDC, formatDate } from "@/lib/format";
 import {
   Warning,
@@ -35,8 +35,10 @@ import {
 } from "@phosphor-icons/react";
 
 const statusVariant = {
+  notInitialized: "warning",
   active: "success",
   frozen: "danger",
+  resolved: "danger",
   completed: "default",
 } as const;
 
@@ -95,13 +97,14 @@ export default function ExporterContractPage() {
 
   const data = dashboardQuery.data;
   const { contract, crop, farmer, phases, ledger } = data;
-  const isFrozen = contract.status === "frozen";
+  const isFrozen = isContractLocked(contract.status);
   const needsInit =
     contract.stellar_contract_id === null ||
     contract.stellar_contract_id === DEMO_CONTRACT_PLACEHOLDER;
   const canRelease = !needsInit && contract.status === "active";
+  const nextPhaseNum = contract.current_phase + 1;
   const currentPhaseData = phases.find(
-    (p) => p.phase_number === contract.current_phase
+    (p) => p.phase_number === nextPhaseNum
   );
   const totalReleased = ledger.reduce((sum, e) => sum + e.amount_released, 0);
   const totalPhases = phases.length || 5;
@@ -168,8 +171,8 @@ export default function ExporterContractPage() {
             <ShieldCheck weight="duotone" className="h-4 w-4 text-text-muted" />
           </CardHeader>
           <CardContent>
-            <Badge variant={statusVariant[contract.status]}>
-              {t(`status.${contract.status}`)}
+            <Badge variant={statusVariant[needsInit ? "notInitialized" : contract.status]}>
+              {t(`status.${needsInit ? "notInitialized" : contract.status}`)}
             </Badge>
           </CardContent>
         </Card>
@@ -241,7 +244,7 @@ export default function ExporterContractPage() {
               {canRelease && currentPhaseData && (
                 <Button onClick={() => setShowReleaseModal(true)} className="gap-2">
                   <PaperPlaneTilt weight="duotone" className="h-4 w-4" />
-                  {tPhases("actions.releasePhase", { number: contract.current_phase })}
+                  {tPhases("actions.releasePhase", { number: nextPhaseNum })}
                 </Button>
               )}
             </div>

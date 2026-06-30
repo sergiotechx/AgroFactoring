@@ -72,6 +72,52 @@ export async function POST(request: Request) {
       );
     }
 
+    // Reject placeholder wallets (e.g. GAAAAAAA...) — they burn funds on
+    // resolve_disaster / release_phase. Detect via a run of 6+ 'A's right
+    // after the leading 'G', which never appears in real ed25519 keys.
+    if (/^GA{6,}/.test(farmer.wallet_address)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "La wallet del agricultor es un placeholder (GAAAA...). Actualice el perfil con la wallet real del agricultor antes de inicializar el escrow.",
+        },
+        { status: 422 }
+      );
+    }
+
+    // Load the exporter's wallet to guard against duplicate addresses. The
+    // escrow transfers USDC to both parties; if they are the same address,
+    // the "split" collapses and all funds go to one wallet (the bug we just
+    // diagnosed on-chain).
+    const { data: exporterProfile, error: exporterProfileError } = await supabase
+      .from("profiles")
+      .select("wallet_address")
+      .eq("id", exporterId)
+      .maybeSingle();
+
+    if (exporterProfileError) {
+      return NextResponse.json(
+        { success: false, error: "Error al consultar el exportador" },
+        { status: 500 }
+      );
+    }
+
+    const exporterWallet = exporterProfile?.wallet_address ?? null;
+    if (
+      exporterWallet &&
+      /^G[A-Z2-7]{55}$/.test(exporterWallet) &&
+      !/^GA{6,}/.test(exporterWallet) &&
+      exporterWallet === farmer.wallet_address
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "El agricultor y el exportador comparten la misma wallet_address. Use wallets distintas para que los fondos se distribuyan correctamente.",
+        },
+        { status: 409 }
+      );
+    }
+
     const { data: phase1, error: phaseError } = await supabase
       .from("crop_phases_budget")
       .select("amount_requested")

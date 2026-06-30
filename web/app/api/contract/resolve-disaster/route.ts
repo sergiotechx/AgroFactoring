@@ -8,13 +8,16 @@ import {
   StellarSdk,
 } from "@/lib/stellar";
 import { parseSimulationError } from "@/lib/contract-errors";
-import { isContractLocked } from "@/features/dashboard/types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const POLL_MAX_ATTEMPTS = 60;
 const POLL_INTERVAL_MS = 1000;
+
+// 30% of the remaining balance goes to the farmer as a rescue fund; the
+// remaining 70% is refunded to the exporter. Matches the README spec.
+const RESCUE_BPS = 3000;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -34,7 +37,7 @@ export async function POST(request: Request) {
 
     const { data: contract, error: contractError } = await supabase
       .from("contracts")
-      .select("id, crop_id, exporter_id, status")
+      .select("id, crop_id, exporter_id, status, total_amount")
       .eq("id", contractId)
       .maybeSingle();
 
@@ -50,16 +53,19 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
-    if (isContractLocked(contract.status)) {
+    if (contract.status !== "frozen") {
       return NextResponse.json(
-        { success: false, error: "El contrato ya está congelado" },
+        {
+          success: false,
+          error: "El contrato no está congelado — solo se puede resolver un escrow congelado",
+        },
         { status: 409 }
       );
     }
 
     const { data: crop, error: cropError } = await supabase
       .from("crops")
-      .select("crop_id_num, farmer_id")
+      .select("crop_id_num")
       .eq("id", contract.crop_id)
       .maybeSingle();
 
@@ -70,34 +76,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const [exporterRow, farmerRow] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("wallet_address")
-        .eq("id", contract.exporter_id)
-        .maybeSingle(),
-      supabase
-        .from("profiles")
-        .select("wallet_address")
-        .eq("id", crop.farmer_id)
-        .maybeSingle(),
-    ]);
-
-    if (!exporterRow.data?.wallet_address || !farmerRow.data?.wallet_address) {
-      return NextResponse.json(
-        { success: false, error: "Falta wallet_address del exporter o farmer" },
-        { status: 404 }
-      );
-    }
-
-    const exporterScVal = StellarSdk.Address.fromString(
-      exporterRow.data.wallet_address
-    ).toScVal();
-    const farmerScVal = StellarSdk.Address.fromString(
-      farmerRow.data.wallet_address
-    ).toScVal();
     const cropIdScVal = StellarSdk.nativeToScVal(BigInt(crop.crop_id_num), {
       type: "u64",
+    });
+    const rescueBpsScVal = StellarSdk.nativeToScVal(RESCUE_BPS, {
+      type: "u32",
     });
 
     const oracleKeypair = getOracleKeypair();
@@ -109,12 +92,7 @@ export async function POST(request: Request) {
       networkPassphrase,
     })
       .addOperation(
-        contractInstance.call(
-          "trigger_disaster",
-          exporterScVal,
-          farmerScVal,
-          cropIdScVal
-        )
+        contractInstance.call("resolve_disaster", cropIdScVal, rescueBpsScVal)
       )
       .setTimeout(180)
       .build();
@@ -127,7 +105,7 @@ export async function POST(request: Request) {
           success: false,
           error: parseSimulationError(
             simulation.error,
-            "trigger_disaster"
+            "resolve_disaster"
           ),
         },
         { status: 400 }
@@ -186,9 +164,31 @@ export async function POST(request: Request) {
       );
     }
 
+    // Compute the rescue amount (30% of remaining) to record in the ledger.
+    // Use stroops (1 USDC = 10^7 stroops) so the 30% is not truncated to
+    // zero for small balances (Math.floor in USDC units loses the fraction).
+    const STROOPS_PER_UNIT = 10_000_000;
+    const { data: ledgerRows } = await supabase
+      .from("phase_ledger")
+      .select("amount_released")
+      .eq("contract_id", contractId);
+
+    const released =
+      ledgerRows?.reduce(
+        (sum, row) => sum + (row.amount_released ?? 0),
+        0
+      ) ?? 0;
+    const remainingStroops = Math.round(
+      ((contract.total_amount ?? 0) - released) * STROOPS_PER_UNIT
+    );
+    const rescueStroops = Math.floor(
+      (remainingStroops * RESCUE_BPS) / 10_000
+    );
+    const rescueAmount = rescueStroops / STROOPS_PER_UNIT;
+
     const { error: updateError } = await supabase
       .from("contracts")
-      .update({ status: "frozen" })
+      .update({ status: "resolved" })
       .eq("id", contractId);
 
     if (updateError) {
@@ -200,6 +200,16 @@ export async function POST(request: Request) {
         },
         { status: 200 }
       );
+    }
+
+    // Record the rescue payout in the ledger.
+    if (rescueAmount > 0) {
+      await supabase.from("phase_ledger").insert({
+        contract_id: contractId,
+        phase_number: 0,
+        tx_hash: txHash,
+        amount_released: rescueAmount,
+      });
     }
 
     return NextResponse.json(
