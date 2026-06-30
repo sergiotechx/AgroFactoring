@@ -17,6 +17,8 @@
 | Exportador | `exportador` | `expo2024` |
 | Agricultor | `agricultor` | `agro2024` |
 
+**Aplicación:** <https://webagro-factory.vercel.app/>
+
 ---
 
 ![Stellar](https://img.shields.io/badge/Stellar-Testnet-7d3cff)
