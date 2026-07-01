@@ -19,6 +19,12 @@
 
 **Application:** <https://webagro-factory.vercel.app/>
 
+**Explainer video:** <https://www.youtube.com/watch?v=rHV3MJyaP30>
+
+**Pitch:**
+- [English (PDF)](./docs/Pitch%20AgroFactoring-EN.pdf)
+- [Spanish (PDF)](./docs/Pitch%20AgroFactoring-ES.pdf)
+
 ---
 
 ![Stellar](https://img.shields.io/badge/Stellar-Testnet-7d3cff)
@@ -49,7 +55,8 @@
 12. [Installation and execution](#12-installation-and-execution)
 13. [Roadmap](#13-roadmap)
 14. [Feature status](#14-feature-status)
-15. [License and credits](#15-license-and-credits)
+15. [Resources](#15-resources)
+16. [License and credits](#16-license-and-credits)
 
 ---
 
@@ -317,6 +324,12 @@ Once established and validated in Colombia, we plan to expand into large markets
 
 All features described in this document are **implemented and operational**: the smart contract compiles (9 functions, 47 tests) and deploys to Stellar testnet; the frontend signs and sends real on-chain transactions via `@stellar/stellar-sdk` 16; the Supabase schema is applied (8 tables, 10 migrations) with demo data loaded; the oracle signs as admin and the emulator inserts weather readings with auto-stop; USDC withdrawal from the contract to the farmer's wallet is real and on-chain. The hackathon MVP fulfills the end-to-end phase-enabling, withdrawal, climate-disaster and redistribution flows. Items pending for production hardening (Supabase RLS, password hashing, native SEP-24 anchor, physical IoT sensors) are documented specifically in [`docs/database.md`](./docs/database.md) and [`docs/roadmap.md`](./docs/roadmap.md).
 
-## 15. License and credits
+## 15. Resources
+
+- **System explainer video:** [https://www.youtube.com/watch?v=rHV3MJyaP30](https://www.youtube.com/watch?v=rHV3MJyaP30)
+- **Pitch AgroFactoring (English):** [`docs/Pitch AgroFactoring-EN.pdf`](./docs/Pitch%20AgroFactoring-EN.pdf)
+- **Pitch AgroFactoring (Spanish):** [`docs/Pitch AgroFactoring-ES.pdf`](./docs/Pitch%20AgroFactoring-ES.pdf)
+
+## 16. License and credits
 
 MIT license. Built for a hackathon on Stellar / Soroban, Next.js and Supabase. Diagrams generated with Mermaid (`.mmd` sources and PNGs in `docs/images/`).

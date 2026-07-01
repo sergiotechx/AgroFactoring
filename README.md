@@ -19,6 +19,12 @@
 
 **Aplicación:** <https://webagro-factory.vercel.app/>
 
+**Video explicativo:** <https://www.youtube.com/watch?v=rHV3MJyaP30>
+
+**Pitch:**
+- [Español (PDF)](./docs/Pitch%20AgroFactoring-ES.pdf)
+- [Inglés (PDF)](./docs/Pitch%20AgroFactoring-EN.pdf)
+
 ---
 
 ![Stellar](https://img.shields.io/badge/Stellar-Testnet-7d3cff)
@@ -49,7 +55,8 @@
 12. [Instalación y ejecución](#12-instalaci%c3%b3n-y-ejecuci%c3%b3n)
 13. [Roadmap](#13-roadmap)
 14. [Estado de las funcionalidades](#14-estado-de-las-funcionalidades)
-15. [Licencia y créditos](#15-licencia-y-cr%c3%a9ditos)
+15. [Recursos](#15-recursos)
+16. [Licencia y créditos](#16-licencia-y-cr%c3%a9ditos)
 
 ---
 
@@ -317,6 +324,12 @@ Una vez establecidos y validados en Colombia, nos pensamos expandir a mercados g
 
 Todas las funcionalidades descritas en este documento están **implementadas y operativas**: el smart contract compila (9 funciones, 47 tests), se despliega en Stellar testnet; el frontend firma y envía transacciones reales on-chain mediante `@stellar/stellar-sdk` 16; el esquema Supabase está aplicado (8 tablas, 10 migraciones) con datos de demo cargados; el oráculo firma como admin y el emulador inserta lecturas meteorológicas con auto-stop; el retiro de USDC del contrato a la wallet del agricultor es real y on-chain. El MVP del hackathon cumple los flujos end-to-end de habilitación por fase, retiro, desastre climático y redistribución. Los aspectos pendientes para Hardening/producción (RLS de Supabase, hash de contraseñas, anchor SEP-24 nativo, sensores IoT físicos) se documentan puntualmente en [`docs/database.md`](./docs/database.md) y [`docs/roadmap.md`](./docs/roadmap.md).
 
-## 15. Licencia y créditos
+## 15. Recursos
+
+- **Video explicativo del sistema:** [https://www.youtube.com/watch?v=rHV3MJyaP30](https://www.youtube.com/watch?v=rHV3MJyaP30)
+- **Pitch AgroFactoring (Español):** [`docs/Pitch AgroFactoring-ES.pdf`](./docs/Pitch%20AgroFactoring-ES.pdf)
+- **Pitch AgroFactoring (Inglés):** [`docs/Pitch AgroFactoring-EN.pdf`](./docs/Pitch%20AgroFactoring-EN.pdf)
+
+## 16. Licencia y créditos
 
 Licencia MIT. Construido para un hackathon sobre Stellar / Soroban, Next.js y Supabase. Diagramas generados con Mermaid (fuentes `.mmd` y PNG en `docs/images/`).
